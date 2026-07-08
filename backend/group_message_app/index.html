@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Group Message App - API Documentation</title>
+    <style>
+      :root {
+        --primary-color: #2563eb;
+        --bg-color: #f8fafc;
+        --card-bg: #ffffff;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --border-color: #e2e8f0;
+        --code-bg: #1e1e1e;
+        --success: #10b981;
+        --error: #ef4444;
+      }
+
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        line-height: 1.6;
+        color: var(--text-main);
+        background-color: var(--bg-color);
+        margin: 0;
+        padding: 2rem;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        color: var(--primary-color);
+        border-bottom: 2px solid var(--border-color);
+        padding-bottom: 0.5rem;
+      }
+
+      .endpoint-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      }
+
+      .endpoint-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .method-badge {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 4px;
+        font-weight: bold;
+        font-size: 0.9rem;
+      }
+
+      .url {
+        font-family: monospace;
+        font-size: 1.1rem;
+        color: var(--text-muted);
+        background: var(--bg-color);
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      h3 {
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.1rem;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      th {
+        background-color: var(--bg-color);
+        font-weight: 600;
+      }
+
+      code {
+        font-family: monospace;
+        background-color: var(--bg-color);
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        color: #db2777;
+      }
+
+      pre {
+        background-color: var(--code-bg);
+        color: #d4d4d4;
+        padding: 1rem;
+        border-radius: 6px;
+        overflow-x: auto;
+        margin: 0;
+      }
+
+      .status-success {
+        color: var(--success);
+        font-weight: bold;
+      }
+      .status-error {
+        color: var(--error);
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Group Message App API Documentation</h1>
+      <p>Base URL: <code>http://localhost:8000/api</code></p>
+      <p>
+        <em
+          >Note: All endpoints currently expect data to be sent as
+          <code>application/x-www-form-urlencoded</code> (Standard Form
+          Data).</em
+        >
+      </p>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge">POST</span>
+          <span class="url">/RegisterApi.php</span>
+        </div>
+        <p>
+          Creates a new user account, hashes their password, and returns a
+          secure API authentication token.
+        </p>
+
+        <h3>Request Parameters</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>name</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>
+                The user's display name. Must be unique. Minimum 3 characters.
+              </td>
+            </tr>
+            <tr>
+              <td><code>password</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>The user's password. Minimum 6 characters.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Responses</h3>
+
+        <p><span class="status-success">Success (200 OK)</span></p>
+        <pre><code>{
+    "status": "success",
+    "message": "User registered successfully",
+    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b"
+}</code></pre>
+
+        <br />
+        <p><span class="status-error">Error (Validation or Conflict)</span></p>
+        <pre><code>{
+    "status": "error",
+    "message": "Error: Username is already taken."
+}</code></pre>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge">POST</span>
+          <span class="url">/LoginApi.php</span>
+        </div>
+        <p>
+          Authenticates an existing user and retrieves their active API token
+          for subsequent requests.
+        </p>
+
+        <h3>Request Parameters</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>name</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>The registered username.</td>
+            </tr>
+            <tr>
+              <td><code>password</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>The associated password.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Responses</h3>
+
+        <p><span class="status-success">Success (200 OK)</span></p>
+        <pre><code>{
+    "status": "success",
+    "message": "Login successful",
+    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b"
+}</code></pre>
+
+        <br />
+        <p><span class="status-error">Error (Invalid Credentials)</span></p>
+        <pre><code>{
+    "status": "error",
+    "message": "Incorrect password"
+}</code></pre>
+      </div>
+    </div>
+  </body>
+</html>

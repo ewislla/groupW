@@ -6,7 +6,6 @@ include("../trait/HashPassword.php");
 
 class User extends Connection
 {
-
     use BasicOperation, Validation, HashPassword;
 
     // defining the table name and column names for the user table
@@ -23,29 +22,27 @@ class User extends Connection
     //register user function
     public function registerUser(string $name, string $password)
     {
-
         //validate the inputs
         $isValid = $this->validateRegistration($name, $password);
 
         if ($isValid !== true) {
-
-            die($isValid);
+            // FIXED: Return JSON-ready error instead of using die()
+            return ["status" => "error", "message" => $isValid];
         }
 
         // check db to see if the user already exists
         if ($this->recordExists($this->table_name, $this->column1, $name)) {
-            die("User already exists");
+            // FIXED: Return JSON-ready error instead of using die()
+            return ["status" => "error", "message" => "User already exists"];
         }
 
         // harshing password 
         $hashedPassword = $this->generateHash($password);
 
-
         //generate api token
         $token = bin2hex(random_bytes(32));
 
         //insert the user into the database
-
         $this->insertOperation(
             $this->table_name,
             $this->column1,
@@ -56,7 +53,6 @@ class User extends Connection
             $token,
             'sss'
         );
-
 
         $newUserId = $this->connection->insert_id;
 
@@ -84,12 +80,18 @@ class User extends Connection
             return ["status" => "error", "message" => $isValid];
         }
 
-        // fetech the user da
+        // fetch the user data
         $userData = $this->fetchRecord($this->table_name, $this->column1, $name);
-
 
         if (!$userData) {
             return ["status" => "error", "message" => "User does not exist Try registering first"];
+        }
+
+        if (!isset($userData['id'])) {
+            return [
+                "status" => "error", 
+                "message" => "Critical Server Error: 'id' column not found in the database return."
+            ];
         }
 
         //verify password
@@ -101,7 +103,6 @@ class User extends Connection
                 "user_id" => $userData['id']
             ];
         } else {
-
             return ["status" => "error", "message" => "Incorrect password"];
         }
     }

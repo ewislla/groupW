@@ -6,11 +6,17 @@ class Connection
 
     public function __construct()
     {
-        $this->connection =  new mysqli('localhost', 'root', '', 'group_message_app');
+        $host = "mysql-wisdomit.alwaysdata.net";
+        $username = 'wisdomit';
+        $password = '$ITwisdom0';
+        $database = 'wisdomit_group_message_app';
+
+        $this->connection =  new mysqli($host, $username, $password, $database);
         if (!$this->connection) {
             die('Error' . $this->connection->connect_error);
-        } 
+        }
     }
 }
 
 
+new Connection();

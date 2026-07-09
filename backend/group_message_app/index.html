@@ -65,6 +65,10 @@
         font-size: 0.9rem;
       }
 
+      .method-badge.get {
+        background-color: #059669;
+      }
+
       .url {
         font-family: monospace;
         font-size: 1.1rem;
@@ -131,7 +135,7 @@
       <p>Base URL: <code>http://localhost:8000/api</code></p>
       <p>
         <em
-          >Note: All endpoints currently expect data to be sent as
+          >Note: Write operations currently expect data to be sent as
           <code>application/x-www-form-urlencoded</code> (Standard Form
           Data).</em
         >
@@ -144,7 +148,7 @@
         </div>
         <p>
           Creates a new user account, hashes their password, and returns a
-          secure API authentication token.
+          secure API authentication token alongside the generated user ID.
         </p>
 
         <h3>Request Parameters</h3>
@@ -181,7 +185,8 @@
         <pre><code>{
     "status": "success",
     "message": "User registered successfully",
-    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b"
+    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b",
+    "user_id": 12
 }</code></pre>
 
         <br />
@@ -199,7 +204,7 @@
         </div>
         <p>
           Authenticates an existing user and retrieves their active API token
-          for subsequent requests.
+          and ID for subsequent frontend display and request logic.
         </p>
 
         <h3>Request Parameters</h3>
@@ -234,7 +239,8 @@
         <pre><code>{
     "status": "success",
     "message": "Login successful",
-    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b"
+    "api_token": "4a9b1c8f3e2d7a6b5c4d3e2f1a0b9c8d7e6f5a4b3c2d1e0f9a8b7c6d5e4f3a2b",
+    "user_id": 12
 }</code></pre>
 
         <br />
@@ -242,6 +248,98 @@
         <pre><code>{
     "status": "error",
     "message": "Incorrect password"
+}</code></pre>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge get">GET</span>
+          <span class="url">/GetMessagesApi.php</span>
+        </div>
+        <p>
+          Retrieves the complete, raw array of all chat messages from the
+          database. Requires no authentication.
+        </p>
+
+        <h3>Request Parameters</h3>
+        <p><em>None required.</em></p>
+
+        <h3>Responses</h3>
+
+        <p><span class="status-success">Success (200 OK)</span></p>
+        <pre><code>{
+    "status": "success",
+    "data": [
+        {
+            "id": 1,
+            "user_id": 12,
+            "message": "Hello everyone!",
+            "timestamp": 1720510722
+        },
+        {
+            "id": 2,
+            "user_id": 15,
+            "message": "Hey there!",
+            "timestamp": 1720510745
+        }
+    ]
+}</code></pre>
+      </div>
+
+      <div class="endpoint-card">
+        <div class="endpoint-header">
+          <span class="method-badge">POST</span>
+          <span class="url">/SendMessageApi.php</span>
+        </div>
+        <p>
+          Securely writes a new message to the database. Identifies the sender
+          via their secret API token to prevent frontend impersonation.
+        </p>
+
+        <h3>Request Parameters</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Parameter</th>
+              <th>Type</th>
+              <th>Required</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>api_token</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>
+                The secret authentication token received during
+                login/registration.
+              </td>
+            </tr>
+            <tr>
+              <td><code>message</code></td>
+              <td>String</td>
+              <td>Yes</td>
+              <td>The text content of the message to be sent.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Responses</h3>
+
+        <p><span class="status-success">Success (200 OK)</span></p>
+        <pre><code>{
+    "status": "success",
+    "message": "Message sent successfully"
+}</code></pre>
+
+        <br />
+        <p>
+          <span class="status-error">Error (Unauthorized / Missing Token)</span>
+        </p>
+        <pre><code>{
+    "status": "error",
+    "message": "Unauthorized: Invalid API token."
 }</code></pre>
       </div>
     </div>

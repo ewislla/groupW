@@ -54,10 +54,24 @@ class User extends Connection
             $name,
             $hashedPassword,
             $token,
-
+            'sss'
         );
 
-        return $token;
+
+        $newUserId = $this->connection->insert_id;
+
+        return [
+            "status" => "success",
+            "message" => "User registered successfully",
+            "api_token" => $token,
+            "user_id" => $newUserId
+        ];
+    }
+
+    // Look up a user using their secret API token
+    public function getUserByToken(string $token)
+    {
+        return $this->fetchRecord($this->table_name, $this->column3, $token);
     }
 
     //login user function
@@ -70,7 +84,7 @@ class User extends Connection
             return ["status" => "error", "message" => $isValid];
         }
 
-        // fetech the user data from the database based on the provided name
+        // fetech the user da
         $userData = $this->fetchRecord($this->table_name, $this->column1, $name);
 
 
@@ -80,14 +94,14 @@ class User extends Connection
 
         //verify password
         if (password_verify($password, $userData[$this->column2])) {
-            // Password matches! Return the token
             return [
                 "status" => "success",
                 "message" => "Login successful",
-                "api_token" => $userData[$this->column3]
+                "api_token" => $userData[$this->column3],
+                "user_id" => $userData['id']
             ];
         } else {
-            // Password failed
+
             return ["status" => "error", "message" => "Incorrect password"];
         }
     }

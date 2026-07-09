@@ -19,14 +19,9 @@ class RegisterApi
         $password = $_POST['password'] ?? '';
 
 
-        $generated_token = $this->userModel->registerUser($name, $password);
+        $response = $this->userModel->registerUser($name, $password);
 
-        // 4. Send the successful JSON response back to the frontend
-        echo json_encode([
-            "status" => "success",
-            "message" => "User registered successfully",
-            "api_token" => $generated_token
-        ]);
+        echo json_encode($response);
     }
 }
 

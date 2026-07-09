@@ -7,13 +7,14 @@ trait BasicOperation
         string  $column1,
         string  $column2,
         string $column3,
-        string $value1,
-        string $value2,
-        string $value3,
+        $value1,
+        $value2,
+        $value3,
+        string $types
     ) {
         $sql = "INSERT INTO $table_name($column1, $column2, $column3) VALUES(?,?,?)";
         $prepare = $this->connection->prepare($sql);
-        $prepare->bind_param('sss', $value1, $value2, $value3);
+        $prepare->bind_param($types, $value1, $value2, $value3);
         $results = $prepare->execute();
         if ($results === false) {
             die('Error in adding to db');
@@ -45,5 +46,19 @@ trait BasicOperation
         $result = $prepare->get_result();
 
         return $result->fetch_assoc();
+    }
+
+    public function getAllRecords(string $table_name)
+    {
+        $sql = "SELECT * FROM $table_name";
+        $prepare = $this->connection->prepare($sql);
+        $result = $prepare->execute();
+        $result = $prepare->get_result();
+
+        if ($result === false) {
+            die('Error in fetching records from db');
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 }

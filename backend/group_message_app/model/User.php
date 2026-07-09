@@ -1,8 +1,8 @@
 <?php
-include("../db/Connection.php");
-include("../trait/BasicOperation.php");
-include("../trait/Validate.php");
-include("../trait/HashPassword.php");
+include_once("../db/Connection.php");
+include_once("../trait/BasicOperation.php");
+include_once("../trait/Validate.php");
+include_once("../trait/HashPassword.php");
 
 class User extends Connection
 {
@@ -87,10 +87,10 @@ class User extends Connection
             return ["status" => "error", "message" => "User does not exist Try registering first"];
         }
 
-        if (!isset($userData['id'])) {
+        if (!isset($userData['user_id'])) {
             return [
                 "status" => "error",
-                "message" => "Critical Server Error: 'id' column not found in the database return."
+                "message" => "Critical Server Error: 'user_id' column not found in the database return."
             ];
         }
 

@@ -1,6 +1,6 @@
 <?php
-include("../db/Connection.php");
-include("../trait/BasicOperation.php");
+include_once("../db/Connection.php");
+include_once("../trait/BasicOperation.php");
 
 class Message extends Connection
 {
@@ -19,10 +19,19 @@ class Message extends Connection
     // to display all messages from the database
     public function getAllMessages()
     {
-        $allMessages = $this->getAllRecords($this->table_name);
-        return $allMessages;
-    }
+        $sql = "SELECT messages.*, users.name 
+                FROM " . $this->table_name . " 
+                JOIN users ON messages.user_id = users.user_id 
+                ORDER BY messages.message_id ASC";
 
+        $result = $this->connection->query($sql);
+
+        if ($result === false) {
+            return [];
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
     public function sendMessage(string $messageContent, int $user_id, $timestamp)
     {
         // Insert the message into the database

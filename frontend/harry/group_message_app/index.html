@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GroupW Messenger</title>
+    <link href="./bootstrap/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #eef2f7;
+            font-family: 'Segoe UI', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .d-none {
+            display: none !important;
+        }
+
+        #message-container {
+            height: 400px;
+            overflow-y: auto;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+        }
+
+        .msg-wrapper {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .msg-wrapper.me {
+            justify-content: flex-end;
+        }
+
+        .msg-bubble {
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 70%;
+        }
+
+        .me .msg-bubble {
+            background: #0d6efd;
+            color: white;
+        }
+
+        .them .msg-bubble {
+            background: #e9ecef;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="auth-view" class="card p-4">
+        <h2 id="auth-title" class="text-center mb-4">Login</h2>
+        <form id="auth-form">
+            <div class="mb-3">
+                <input type="text" id="username" class="form-control" placeholder="Username" required>
+            </div>
+            <div class="mb-3">
+                <input type="password" id="password" class="form-control" placeholder="Password" required>
+            </div>
+            <div id="auth-error" class="alert alert-danger d-none p-2 text-center"></div>
+            <button type="submit" id="auth-btn" class="btn btn-primary w-100">Login</button>
+        </form>
+        <p class="text-center mt-3">
+            <a href="#" id="toggle-auth">Switch to Register/Login</a>
+        </p>
+    </div>
+
+    <div id="chat-view" class="card p-4 d-none" style="max-width: 600px;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5>GroupW Global</h5>
+            <button onclick="location.reload()" class="btn btn-sm btn-outline-danger">Leave</button>
+        </div>
+        <div id="message-container">
+        </div>
+        <form id="chat-form" class="mt-3 d-flex">
+            <input type="text" id="message-input" class="form-control me-2" placeholder="Type a message..." required>
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

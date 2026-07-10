@@ -32,7 +32,7 @@ class User extends Connection
 
         // check db to see if the user already exists
         if ($this->recordExists($this->table_name, $this->column1, $name)) {
-            // FIXED: Return JSON-ready error instead of using die()
+        
             return ["status" => "error", "message" => "User already exists"];
         }
 

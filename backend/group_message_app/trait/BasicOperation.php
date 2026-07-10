@@ -61,4 +61,24 @@ trait BasicOperation
 
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+
+    public function updateOperation(
+        string $table_name,
+        string $column_to_update,
+        string $where_column,
+        $new_value,
+        $where_value,
+        string $types 
+    ) {
+        $sql = "UPDATE $table_name SET $column_to_update = ? WHERE $where_column = ?";
+        $prepare = $this->connection->prepare($sql);
+        
+        $prepare->bind_param($types, $new_value, $where_value);
+        $results = $prepare->execute();
+        
+        if ($results === false) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EpicAttendance</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .loader {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body class="bg-light">
+
+    <!-- Loader -->
+    <div id="loader" class="spinner-border text-primary loader" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center">EpicAttendance Management</h1>
+
+        <!-- Faculty Section -->
+        <section class="card p-4 mb-4 shadow-sm">
+            <h3 class="mb-3">Faculties</h3>
+            <form id="facultyForm" class="row g-3 mb-3">
+                <div class="col-auto flex-grow-1">
+                    <input type="text" id="facultyName" class="form-control" placeholder="New Faculty Name" required>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Add Faculty</button>
+                </div>
+            </form>
+            <ul id="facultyList" class="list-group"></ul>
+        </section>
+
+        <!-- Department Section -->
+        <section class="card p-4 shadow-sm">
+            <h3 class="mb-3">Departments</h3>
+            <form id="deptForm" class="row g-3 mb-3">
+                <div class="col-auto">
+                    <input type="text" id="deptName" class="form-control" placeholder="Dept Name" required>
+                </div>
+                <div class="col-auto">
+                    <select id="facultySelect" class="form-select" required></select>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success">Add Department</button>
+                </div>
+            </form>
+            <ul id="deptList" class="list-group"></ul>
+        </section>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Item</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="editId">
+                    <input type="hidden" id="editType">
+                    <input type="hidden" id="editFacultyId">
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input type="text" id="editName" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Your App Logic -->
+    <script src="app.js"></script>
+</body>
+
+</html>

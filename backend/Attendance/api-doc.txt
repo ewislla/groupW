@@ -1,0 +1,180 @@
+=========================================================
+ATTENDANCE SYSTEM - API DOCUMENTATION
+=========================================================
+Base URL: http://localhost:8000/api/
+Content-Type (General): application/json; charset=UTF-8
+=========================================================
+
+---------------------------------------------------------
+1. FACULTY ENDPOINTS
+---------------------------------------------------------
+
+Endpoint: AddFaculty.php
+Method: POST
+Description: Creates a new faculty record.
+Request Type: FormData
+Payload:
+  - facultyname (string, required): The name of the faculty.
+Responses:
+  - 201 Created: {"status": "success", "message": "Faculty added successfully"}
+  - 400 Bad Request: {"status": "error", "message": "[Validation error message]"}
+
+Endpoint: EditFaculty.php
+Method: PUT
+Description: Updates an existing faculty record.
+Request Type: JSON (application/json)
+Payload:
+  {
+    "faculty_id": 1,
+    "name": "Updated Faculty Name"
+  }
+Responses:
+  - 200 OK: {"status": "success", "message": "Faculty updated successfully"}
+  - 400 Bad Request: {"status": "error", "message": "Faculty ID and name cannot be empty"}
+  - 500 Internal Error: {"status": "error", "message": "Failed to update faculty"}
+
+Endpoint: GetFaculty.php
+Method: GET
+Description: Retrieves all faculty records.
+Request Type: None
+Responses:
+  - 200 OK: 
+    {
+      "status": "success",
+      "data": [
+        {"faculty_id": 1, "name": "Computing"}
+      ]
+    }
+
+
+---------------------------------------------------------
+2. DEPARTMENT ENDPOINTS
+---------------------------------------------------------
+
+Endpoint: AddDepartment.php
+Method: POST
+Description: Creates a new department linked to a faculty.
+Request Type: FormData
+Payload:
+  - name (string, required): The name of the department.
+  - faculty_id (integer, required): The ID of the parent faculty.
+Responses:
+  - 201 Created: {"status": "success", "message": "Department added successfully"}
+  - 409 Conflict: {"status": "error", "message": "Department already exists"}
+
+Endpoint: EditDepartment.php
+Method: PUT
+Description: Updates an existing department record.
+Request Type: JSON (application/json)
+Payload:
+  {
+    "department_id": 1,
+    "name": "Updated Department Name",
+    "faculty_id": 2
+  }
+Responses:
+  - 200 OK: {"status": "success", "message": "Department updated successfully"}
+  - 400 Bad Request: {"status": "error", "message": "Department ID, name, and Faculty ID cannot be empty"}
+  - 500 Internal Error: {"status": "error", "message": "Failed to update department"}
+
+Endpoint: GetDepartment.php
+Method: GET
+Description: Retrieves all department records.
+Request Type: None
+Responses:
+  - 200 OK: 
+    {
+      "status": "success",
+      "data": [
+        {"department_id": 1, "name": "Software Engineering", "faculty_id": 1}
+      ]
+    }
+
+
+---------------------------------------------------------
+3. STUDENT ENDPOINTS
+---------------------------------------------------------
+
+Endpoint: RegisterStudent.php
+Method: POST
+Description: Registers a new student into the system.
+Request Type: FormData
+Payload:
+  - first_name (string, required)
+  - last_name (string, required)
+  - middle_name (string, optional)
+  - gender (enum: 'Male'|'Female', required)
+  - matric_no (string, required, unique)
+  - email (string, required, unique)
+  - password (string, required, min: 6 chars)
+  - department_id (integer, required)
+  - faculty_id (integer, required)
+Responses:
+  - 201 Created: {"status": "success", "message": "Student registered successfully"}
+  - 400 Bad Request: {"status": "error", "message": "[Validation error or duplicate email/matric error]"}
+
+
+---------------------------------------------------------
+4. USER & AUTHENTICATION ENDPOINTS
+---------------------------------------------------------
+
+Endpoint: SeedUser.php
+Method: POST
+Description: Initializes the database with a default moderator account if empty.
+Request Type: None
+Payload: None
+Responses:
+  - 201 Created: {"status": "success", "message": "User seeded Successfully"}
+  - 400 Bad Request: {"status": "error", "message": "A user already exist try to login or cantact support"}
+
+Endpoint: AddUser.php
+Method: POST
+Description: Creates a new system user (Admin/Moderator).
+Request Type: FormData
+Payload:
+  - first_name (string, required)
+  - last_name (string, required)
+  - middle_name (string, optional)
+  - email (string, required, unique)
+  - password (string, required, min: 6 chars)
+  - role (string, required)
+  - active (string: 'true'|'false', required)
+Responses:
+  - 201 Created: {"status": "success", "message": "User Added successfully"}
+  - 400 Bad Request: {"status": "error", "message": "[Validation or duplicate email error]"}
+
+Endpoint: LoginUser.php
+Method: POST
+Description: Authenticates a user and returns an access token.
+Request Type: FormData
+Payload:
+  - email (string, required)
+  - password (string, required)
+Responses:
+  - 200 OK: 
+    {
+      "status": "success", 
+      "message": "Login successful", 
+      "token": "[32-byte hex token]"
+    }
+  - 401 Unauthorized: {"status": "error", "message": "Incorrect password" OR "User does not exist."}
+
+Endpoint: GetUser.php
+Method: GET
+Description: Retrieves all registered system users.
+Request Type: None
+Responses:
+  - 200 OK: 
+    {
+      "status": "success",
+      "data": [
+        {
+          "user_id": 1, 
+          "first_name": "john", 
+          "last_name": "doe",
+          "email": "johndoe@gmail.com",
+          "role": "Moderator",
+          "active": "true"
+        }
+      ]
+    }

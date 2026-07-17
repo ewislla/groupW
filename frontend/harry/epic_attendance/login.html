@@ -1,76 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>System Login</title>
+    <!-- Standard Bootstrap 5 CSS -->
     <link href="../group_message_app/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/login.css">
 </head>
-<body class="d-flex align-items-center justify-content-center vh-100">
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-5 col-lg-4">
-                <div class="card p-4">
-                    <div class="text-center mb-4">
-                        <h4 class="fw-bold">Welcome Back</h4>
-                        <p class="text-muted small">Sign in to manage attendance</p>
-                    </div>
-                    
-                    <div id="alertBox"></div>
+<body>
 
-                    <form id="loginForm">
-                        <div class="mb-3">
-                            <label class="form-label text-muted small fw-bold">Email Address</label>
-                            <input type="email" id="email" class="form-control" required placeholder="admin@example.com">
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label text-muted small fw-bold">Password</label>
-                            <input type="password" id="password" class="form-control" required placeholder="••••••••">
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 mb-3">Sign In</button>
-                    </form>
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center">
+        <div class="spinner-border text-dark mb-3" role="status"></div>
+        <p class="fw-medium text-secondary">Checking system status...</p>
+    </div>
 
-                    <hr>
-                    <div class="text-center">
-                        <button id="seedBtn" class="btn btn-sm btn-outline-secondary">Initialize/Seed Admin</button>
-                    </div>
+    <!-- Login Card (Hidden until system check passes) -->
+    <div class="card d-none" id="loginCard">
+        <div class="card-header card-header-custom">
+            <h4 class="mb-0 fw-bold">Admin Portal</h4>
+            <small class="text-secondary" id="formSubtitle">Sign in to manage attendance</small>
+        </div>
+        <div class="card-body p-4">
+
+            <div id="loginAlert" class="alert d-none" role="alert"></div>
+
+            <!-- STEP 1: Email and Password Form -->
+            <form id="step1Form">
+                <div class="mb-3">
+                    <label for="email" class="form-label fw-semibold">Email Address</label>
+                    <input type="email" class="form-control" id="email" name="email" required
+                        placeholder="admin@example.com">
                 </div>
-            </div>
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Password</label>
+                    <input type="password" class="form-control" id="password" name="password" required
+                        placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn btn-dark w-100 py-2 fw-semibold" id="loginBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="loginSpinner" role="status"
+                        aria-hidden="true"></span>
+                    <span id="loginBtnText">Sign In</span>
+                </button>
+            </form>
+
+            <!-- STEP 2: OTP Verification Form -->
+            <form id="step2Form" class="d-none">
+                <div class="mb-4 text-center">
+                    <label for="otp_code" class="form-label fw-semibold">Authentication Code</label>
+                    <p class="small text-muted mb-3">Please check your email for the 6-character code.</p>
+                    <input type="text"
+                        class="form-control form-control-lg text-center fw-bold tracking-widest text-uppercase"
+                        id="otp_code" name="otp_code" placeholder="------" maxlength="6" autocomplete="off" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold mb-3" id="verifyBtn">
+                    <span class="spinner-border spinner-border-sm d-none" id="verifySpinner" role="status"
+                        aria-hidden="true"></span>
+                    <span id="verifyBtnText">Verify Code</span>
+                </button>
+
+                <div class="text-center">
+                    <button type="button" class="btn btn-link text-decoration-none p-0 text-primary small fw-semibold"
+                        id="resendBtn" onclick="resendCode()">
+                        <span class="spinner-border spinner-border-sm d-none" id="resendSpinner" role="status"
+                            aria-hidden="true"></span>
+                        <span id="resendBtnText">Resend Code</span>
+                    </button>
+                </div>
+            </form>
+
         </div>
     </div>
 
-    <script src="js/api.js"></script>
+    <script src="../group_message_app/bootstrap/bootstrap.bundle.min.js"></script>
     <script>
-        // Handle Login
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        var baseUrl = "http://localhost:8000/api/";
+        var userEmail = ""; // Stores the email globally to pass to the OTP endpoints
+
+        // INITIALIZATION CHECK
+        window.onload = async function () {
+            try {
+                var response = await fetch(baseUrl + "GetUser.php");
+                var result = await response.json();
+
+                var loadingState = document.getElementById("loadingState");
+                var loginCard = document.getElementById("loginCard");
+
+                // Redirect to seed page if no users exist
+                if (!result.data || result.data.length === 0) {
+                    window.location.href = "seed.html";
+                } else {
+                    loadingState.className = "d-none";
+                    loginCard.className = "card shadow";
+                }
+            } catch (error) {
+                document.getElementById("loadingState").innerHTML = "<p class='text-danger fw-bold'>Failed to connect to the API. Check your server.</p>";
+            }
+        };
+
+        // PHASE 1: SUBMIT CREDENTIALS
+        document.getElementById("step1Form").addEventListener("submit", async function (e) {
             e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('email', document.getElementById('email').value);
-            formData.append('password', document.getElementById('password').value);
 
-            const response = await apiCall('LoginUser.php', 'POST', formData, true);
+            var form = e.target;
+            var formData = new FormData(form);
+            var btn = document.getElementById("loginBtn");
+            var spinner = document.getElementById("loginSpinner");
+            var text = document.getElementById("loginBtnText");
+            var alertBox = document.getElementById("loginAlert");
 
-            if (response.status === 'success') {
-                localStorage.setItem('access_token', response.token);
-                showAlert(response.message, 'success');
-                setTimeout(() => window.location.href = 'faculty.html', 1000); // Redirect on success
-            } else {
-                showAlert(response.message || 'Login failed', 'danger');
+            btn.disabled = true;
+            spinner.className = "spinner-border spinner-border-sm";
+            text.textContent = "Authenticating...";
+            alertBox.className = "alert d-none";
+
+            try {
+                var response = await fetch(baseUrl + "LoginUser.php", {
+                    method: "POST",
+                    body: formData
+                });
+                var result = await response.json();
+
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Sign In";
+
+                if (result.status === "otp_sent") {
+                    userEmail = result.email || document.getElementById("email").value;
+
+                    document.getElementById("step1Form").className = "d-none";
+                    document.getElementById("step2Form").className = "";
+                    document.getElementById("formSubtitle").textContent = "Two-Factor Authentication";
+
+                    alertBox.className = "alert alert-success";
+                    alertBox.textContent = result.message;
+                    document.getElementById("otp_code").focus();
+                } else {
+                    alertBox.className = "alert alert-danger";
+                    alertBox.textContent = result.message || "Invalid credentials.";
+                }
+            } catch (error) {
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Sign In";
+                alertBox.className = "alert alert-danger";
+                alertBox.textContent = "Network error while connecting to server.";
             }
         });
 
-        // Handle Seed
-        document.getElementById('seedBtn').addEventListener('click', async () => {
-            const response = await apiCall('SeedUser.php', 'POST');
-            if (response.status === 'success') {
-                showAlert(response.message, 'success');
-            } else {
-                showAlert(response.message, 'warning');
+        // PHASE 2: VERIFY OTP
+        document.getElementById("step2Form").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            var otpCode = document.getElementById("otp_code").value.trim();
+            var btn = document.getElementById("verifyBtn");
+            var spinner = document.getElementById("verifySpinner");
+            var text = document.getElementById("verifyBtnText");
+            var alertBox = document.getElementById("loginAlert");
+
+            btn.disabled = true;
+            spinner.className = "spinner-border spinner-border-sm";
+            text.textContent = "Verifying...";
+            alertBox.className = "alert d-none";
+
+            var formData = new FormData();
+            formData.append("email", userEmail);
+            formData.append("otp_code", otpCode);
+
+            try {
+                var response = await fetch(baseUrl + "VerifyOTP.php", {
+                    method: "POST",
+                    body: formData
+                });
+                var result = await response.json();
+
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Verify Code";
+
+                if (result.status === "success") {
+                    localStorage.setItem("user_token", result.token); // Storing exactly as requested
+                    window.location.href = "users.html"; // Routing exactly as requested
+                } else {
+                    alertBox.className = "alert alert-danger";
+                    alertBox.textContent = result.message || "Invalid authentication code.";
+                    document.getElementById("otp_code").value = "";
+                }
+            } catch (error) {
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Verify Code";
+                alertBox.className = "alert alert-danger";
+                alertBox.textContent = "Network error during verification.";
             }
         });
+
+        // AUXILIARY: RESEND OTP
+        async function resendCode() {
+            var btn = document.getElementById("resendBtn");
+            var spinner = document.getElementById("resendSpinner");
+            var text = document.getElementById("resendBtnText");
+            var alertBox = document.getElementById("loginAlert");
+
+            btn.disabled = true;
+            spinner.className = "spinner-border spinner-border-sm";
+            text.textContent = "Sending...";
+            alertBox.className = "alert d-none";
+
+            var formData = new FormData();
+            formData.append("email", userEmail);
+
+            try {
+                var response = await fetch(baseUrl + "ResendOTP.php", {
+                    method: "POST",
+                    body: formData
+                });
+                var result = await response.json();
+
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Resend Code";
+
+                if (result.status === "success") {
+                    alertBox.className = "alert alert-info";
+                    alertBox.textContent = result.message;
+                    document.getElementById("otp_code").value = "";
+                    document.getElementById("otp_code").focus();
+                } else {
+                    alertBox.className = "alert alert-danger";
+                    alertBox.textContent = result.message || "Failed to resend code.";
+                }
+            } catch (error) {
+                btn.disabled = false;
+                spinner.className = "spinner-border spinner-border-sm d-none";
+                text.textContent = "Resend Code";
+                alertBox.className = "alert alert-danger";
+                alertBox.textContent = "Network error while resending.";
+            }
+        }
     </script>
 </body>
+
 </html>

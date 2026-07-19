@@ -30,7 +30,7 @@ class User extends Connection
         $hash_password = password_hash($password, PASSWORD_DEFAULT);
         $token = bin2hex(random_bytes(32));
         //add user into db
-        $seed_user = $this->InsertUser($name, 'doe', '', 'wisdomudhedhe@gmail.com', $hash_password, 'Moderator', $token, 'true');
+        $seed_user = $this->InsertUser($name, 'doe', '', 'johndoe@gmail.com', $hash_password, 'Moderator', $token, 'true');
 
         if ($seed_user) {
             return ["status" => "success", "message" => "User seeded Successfully"];
@@ -78,39 +78,11 @@ class User extends Connection
         }
     }
 
-    // public function loginUser(
-    //     string $email,
-    //     string $password
-    // ) {
-    //     // Validate first
-    //     $isValid = $this->ValidateLogin($email, $password);
-
-    //     if ($isValid !== "valid") {
-    //         return ["status" => "error", "message" => $isValid];
-    //     }
-
-    //     $user_data = $this->getSingleRecord('users', 'email', $email);
-
-    //     // Check if the user DOES NOT exist
-    //     if (!$user_data) {
-    //         return ["status" => "error", "message" => "User does not exist. Try registering first."];
-    //     }
-
-    //     // Verify password
-    //     if (password_verify($password, $user_data['password'])) {
-    //         return [
-    //             "status" => "success",
-    //             "message" => "Login successful",
-    //             "token" => $user_data['tokens']
-    //         ];
-    //     } else {
-    //         return ["status" => "error", "message" => "Incorrect password"];
-    //     }
-    // }
 
     public function loginUser(
         string $email,
-        string $password
+        string $password,
+        string $device_id
     ) {
         // Validate first
         $isValid = $this->ValidateLogin($email, $password);
@@ -126,6 +98,13 @@ class User extends Connection
             return ["status" => "error", "message" => "User does not exist. Try registering first."];
         }
 
+        if (!empty($user_data['current_device_id']) && $user_data['current_device_id'] !== $device_id) {
+            return [
+                'status' => 'error',
+                'message' => 'You are already logged in on another device. Please log out of that device first.'
+            ];
+        }
+
         // Verify password
         if (password_verify($password, $user_data['password'])) {
 
@@ -139,15 +118,15 @@ class User extends Connection
             $otpSaved = $this->setOTP($email, $otp_code, $otp_expiry);
 
             if ($otpSaved) {
-                // 4. Send the Email using the new Mailer trait
-                // We pass the user's first name from the database row to personalize the email
-                $emailSent = $this->sendOTPEmail($email, $user_data['first_name'], $otp_code);
+
+                $emailSent = $this->sendOTPEmail($email, $user_data['first_name'], $otp_code, $otp_expiry);
 
                 if ($emailSent) {
                     return [
                         "status" => "otp_sent",
                         "message" => "An authentication code has been sent to your email.",
-                        "email" => $email
+                        "email" => $email,
+                        "time_expire" => $user_data['otp_expiry']
                     ];
                 } else {
                     // Wipes the OTP from DB if email failed to send to prevent ghost codes
@@ -177,23 +156,24 @@ class User extends Connection
             return ["status" => "error", "message" => "Session expired. Please start the login process again."];
         }
 
-        // 2. Generate a fresh alphanumeric code
+        // Generate a fresh alphanumeric code
         $otp_code = strtoupper(bin2hex(random_bytes(3)));
 
-        // 3. Reset the clock for another 10 minutes
+        //  Reset the clock for another 10 minutes
         $otp_expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
 
-        // 4. Overwrite the old OTP in the database
+        //  Overwrite the old OTP in the database
         $otpSaved = $this->setOTP($email, $otp_code, $otp_expiry);
 
         if ($otpSaved) {
-            // 5. Send the new email
-            $emailSent = $this->sendOTPEmail($email, $user_data['first_name'], $otp_code);
+            //  Send the new email
+            $emailSent = $this->sendOTPEmail($email, $user_data['first_name'], $otp_code, $otp_expiry);
 
             if ($emailSent) {
                 return [
                     "status" => "success",
-                    "message" => "A new authentication code has been sent to your email."
+                    "message" => "A new authentication code has been sent to your email.",
+                    "time_expire" => $user_data['otp_expiry']
                 ];
             } else {
                 $this->setOTP($email, NULL, NULL);
@@ -204,7 +184,7 @@ class User extends Connection
         }
     }
 
-    public function verifyOTP(string $email, string $otp_code)
+    public function verifyOTP(string $email, string $otp_code, ?string $device_id = null)
     {
         $user_data = $this->getSingleRecord('users', 'email', $email);
 
@@ -212,29 +192,106 @@ class User extends Connection
             return ["status" => "error", "message" => "Session invalid. Please log in again."];
         }
 
-        // Check if an OTP even exists in the database
         if (empty($user_data['otp_code'])) {
             return ["status" => "error", "message" => "No OTP requested or code already used."];
         }
 
-        // Check if the code matches (making it case-insensitive just in case)
         if (strtoupper($user_data['otp_code']) !== strtoupper($otp_code)) {
             return ["status" => "error", "message" => "Invalid authentication code."];
         }
 
-        // Check if the expiration time has passed
         if (strtotime($user_data['otp_expiry']) < time()) {
-            return ["status" => "error", "message" => "Authentication code has expired. Please request a new one."];
+            return ["status" => "error", "message" => "Authentication code has expired."];
         }
 
-        // Success! Wipe the OTP from the database to prevent reuse
+        // Wipe the OTP to prevent reuse
         $this->setOTP($email, NULL, NULL);
 
-        // Return the final token
+        // If this is a Login, generate token and save device
+        if ($device_id !== null) {
+            $new_token = bin2hex(random_bytes(16));
+            $this->setDeviceAndToken($email, $new_token, $device_id);
+
+            return [
+                "status" => "success",
+                "message" => "Login successful",
+                "token" => $new_token
+            ];
+        }
+
+        // If this is a Password Reset, just return success without token stuff
         return [
             "status" => "success",
-            "message" => "Login successful",
-            "token" => $user_data['tokens']
+            "message" => "OTP Verified successfully"
         ];
+    }
+
+    //  Request the Reset
+    public function requestPasswordReset(string $email)
+    {
+        $check_valid = $this->ValidateReset($email);
+        if ($check_valid !== "valid") {
+            return ['status' => 'error', 'message' => $check_valid];
+        }
+
+        $user_data = $this->getSingleRecord('users', 'email', $email);
+        if ($user_data == false) {
+            return ['status' => 'error', 'message' => 'User does not exist'];
+        }
+
+        $otp_code = strtoupper(bin2hex(random_bytes(3)));
+        $otp_expiry = date("Y-m-d H:i:s", strtotime("+10 minutes"));
+        $otp_saved = $this->setOTP($email, $otp_code, $otp_expiry);
+
+        if ($otp_saved) {
+            $email_sent = $this->sendOTPEmail($email, $user_data['first_name'], $otp_code, $otp_expiry);
+
+            if ($email_sent) {
+                return [
+                    "status" => "otp_sent",
+                    "message" => "A password reset code has been sent to your email.",
+                    "email" => $email,
+                    "time_expire" => $otp_expiry // Fixed: Now returns the fresh timestamp
+                ];
+            } else {
+                $this->setOTP($email, NULL, NULL);
+                return ["status" => "error", "message" => "Failed to send reset email. Please try again later."];
+            }
+        }
+        return ["status" => "error", "message" => "Failed to initiate password reset."];
+    }
+
+    // Verify and Update
+    public function completePasswordReset(string $email, string $user_provided_otp, string $new_password)
+    {
+        // 1. Verify the code using your existing robust method
+        $verify_code = $this->verifyOTP($email, $user_provided_otp);
+
+        // verifyOTP returns an array with "status" => "success" if it passes
+        if (isset($verify_code['status']) && $verify_code['status'] === "success") {
+
+            // 2. Hash the new password
+            $hash_password = password_hash($new_password, PASSWORD_DEFAULT);
+
+            // 3. Store the new password (assuming this method exists in your BasicOperation trait)
+            $reset = $this->updatePassword($hash_password, $email);
+
+            if ($reset) {
+                return ["status" => "success", "message" => "Password reset successful. You can now log in."];
+            } else {
+                return ["status" => "error", "message" => "Failed to update password in the database."];
+            }
+        }
+
+        // If OTP fails, return the exact error message from verifyOTP
+        return $verify_code;
+    }
+
+    public function logoutUser(string $token)
+    {
+
+        $logout_user = $this->logoutDevice($token);
+
+        return $logout_user;
     }
 }

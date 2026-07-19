@@ -59,3 +59,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 ALTER TABLE users 
 ADD COLUMN otp_code VARCHAR(10) NULL AFTER password,
 ADD COLUMN otp_expiry DATETIME NULL AFTER otp_code;
+
+
+ALTER TABLE users 
+ADD COLUMN current_device_id VARCHAR(100) NULL AFTER tokens;

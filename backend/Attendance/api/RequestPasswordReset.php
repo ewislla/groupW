@@ -9,28 +9,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-include_once('../model/User.php');
+require_once __DIR__ . '/../model/User.php';
 
 $userModel = new User();
 
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-$password = isset($_POST['password']) ? trim($_POST['password']) : '';
-$device_id = isset($_POST['device_id']) ? trim($_POST['device_id']) : '';
+$result = $userModel->requestPasswordReset($email);
 
-if (empty($email) || empty($password) || empty($device_id)) {
-    http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Email, password, and Device ID are required"]);
-    exit();
-}
-
-
-$result = $userModel->loginUser($email, $password, $device_id);
-
-
+// Check for "otp_sent" 
 if (isset($result['status']) && $result['status'] === 'otp_sent') {
     http_response_code(200);
 } else {
-    http_response_code(401);
+    http_response_code(400);
 }
 
 echo json_encode($result);
+?>

@@ -12,34 +12,42 @@
         .btn-custom { background-color: #00B4D5; color: #FAFAFA; border: none; font-weight: 600; }
         .btn-custom:hover { background-color: #062A39; color: #FAFAFA; }
         .text-accent { color: #00B4D5; }
+        .link-muted { color: #6c757d; cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .link-muted:hover { color: #062A39; text-decoration: underline; }
     </style>
 </head>
 <body class="d-flex align-items-center justify-content-center vh-100">
 
     <div class="container" style="max-width: 450px;">
         
-        <!-- Loading spinner shown while checking database -->
+        <!-- Loading spinner -->
         <div id="loadingState" class="text-center">
             <div class="spinner-border mb-2" role="status" style="color: #00B4D5;"></div>
             <p>Checking system status...</p>
         </div>
 
-        <!-- Hidden by default, shown if users exist -->
         <div class="card d-none" id="loginCard">
             <div class="card-header card-header-custom p-4 text-center">
-                <h4 class="mb-0 fw-bold">Attendance System</h4>
+                <h4 class="mb-0 fw-bold" id="cardTitle">Attendance System</h4>
             </div>
             <div class="card-body p-4">
                 <div id="loginAlert" class="alert d-none" role="alert"></div>
 
-                <!-- Step 1: Email and Password Form -->
+                <!-- ============================== -->
+                <!-- LOGIN FLOW                     -->
+                <!-- ============================== -->
+
+                <!-- Login Phase 1: Credentials -->
                 <form id="step1Form">
                     <div class="mb-3">
                         <label for="email" class="form-label fw-medium">Email Address</label>
                         <input type="email" class="form-control" id="email" name="email" required>
                     </div>
                     <div class="mb-4">
-                        <label for="password" class="form-label fw-medium">Password</label>
+                        <div class="d-flex justify-content-between">
+                            <label for="password" class="form-label fw-medium">Password</label>
+                            <a class="link-muted" onclick="toggleFlow('forgotStep1')">Forgot Password?</a>
+                        </div>
                         <input type="password" class="form-control" id="password" name="password" required>
                     </div>
                     <button type="submit" class="btn btn-custom w-100 py-2" id="loginBtn">
@@ -48,7 +56,7 @@
                     </button>
                 </form>
 
-                <!-- Step 2: OTP Verification Form (Hidden Initially) -->
+                <!-- Login Phase 2: 2FA OTP -->
                 <form id="step2Form" class="d-none">
                     <div class="mb-4 text-center">
                         <p class="mb-1 fw-medium">Enter Authentication Code</p>
@@ -57,15 +65,76 @@
                     <div class="mb-4">
                         <input type="text" class="form-control form-control-lg text-center fw-bold" id="otp_code" name="otp_code" placeholder="------" maxlength="6" style="letter-spacing: 5px; color: #062A39;" required>
                     </div>
+                    
                     <button type="submit" class="btn btn-custom w-100 py-2 mb-3" id="verifyBtn">
                         <span class="spinner-border spinner-border-sm d-none" id="verifySpinner" role="status"></span>
                         <span id="verifyBtnText">Verify Code</span>
                     </button>
                     <div class="text-center">
-                        <button type="button" class="btn btn-link text-decoration-none fw-bold" style="color: #062A39;" id="resendBtn" onclick="resendCode()">
-                            <span class="spinner-border spinner-border-sm d-none" id="resendSpinner" role="status"></span>
-                            <span id="resendBtnText">Resend Code</span>
-                        </button>
+                        <a class="link-muted fw-bold d-block mb-2" onclick="resendCode(userEmail, 'LoginUser.php')">Resend Code</a>
+                        <a class="link-muted" onclick="toggleFlow('loginStep1')">Cancel Login</a>
+                    </div>
+                </form>
+
+                <!-- ============================== -->
+                <!-- PASSWORD RESET FLOW            -->
+                <!-- ============================== -->
+
+                <!-- Reset Step 1: Email Request -->
+                <form id="forgotStep1Form" class="d-none">
+                    <div class="mb-3 text-center">
+                        <p class="text-muted">Enter your registered email address. We will send you a 6-character code to reset your password.</p>
+                    </div>
+                    <div class="mb-4">
+                        <label for="resetEmailInput" class="form-label fw-medium">Email Address</label>
+                        <input type="email" class="form-control" id="resetEmailInput" name="email" required>
+                    </div>
+                    <button type="submit" class="btn btn-custom w-100 py-2 mb-3" id="resetReqBtn">
+                        <span class="spinner-border spinner-border-sm d-none" id="resetReqSpinner" role="status"></span>
+                        <span id="resetReqBtnText">Send Reset Code</span>
+                    </button>
+                    <div class="text-center">
+                        <a class="link-muted" onclick="toggleFlow('loginStep1')">Back to Login</a>
+                    </div>
+                </form>
+
+                <!-- Reset Step 2: OTP Entry (Frontend Only) -->
+                <form id="forgotStep2Form" class="d-none">
+                    <div class="mb-4 text-center">
+                        <p class="mb-1 fw-medium">Reset Code Sent</p>
+                        <small class="text-muted">Enter the 6-character code sent to your email.</small>
+                    </div>
+                    <div class="mb-4">
+                        <input type="text" class="form-control form-control-lg text-center fw-bold" id="resetOtpInput" placeholder="------" maxlength="6" style="letter-spacing: 5px; color: #062A39;" required>
+                    </div>
+                    <button type="submit" class="btn btn-custom w-100 py-2 mb-3">
+                        Continue
+                    </button>
+                    <div class="text-center">
+                        <a class="link-muted fw-bold d-block mb-2" onclick="resendCode(resetEmailState, 'RequestPasswordReset.php')">Resend Code</a>
+                        <a class="link-muted" onclick="toggleFlow('loginStep1')">Cancel Reset</a>
+                    </div>
+                </form>
+
+                <!-- Reset Step 3: New Password Submission -->
+                <form id="forgotStep3Form" class="d-none">
+                    <div class="mb-3 text-center">
+                        <p class="text-muted">Create a new password for your account.</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newPassword" class="form-label fw-medium">New Password</label>
+                        <input type="password" class="form-control" id="newPassword" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label fw-medium">Confirm Password</label>
+                        <input type="password" class="form-control" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-custom w-100 py-2 mb-3" id="resetFinalBtn">
+                        <span class="spinner-border spinner-border-sm d-none" id="resetFinalSpinner" role="status"></span>
+                        <span id="resetFinalBtnText">Update Password</span>
+                    </button>
+                    <div class="text-center">
+                        <a class="link-muted" onclick="toggleFlow('loginStep1')">Cancel Reset</a>
                     </div>
                 </form>
 
@@ -75,134 +144,219 @@
 
     <script>
         const baseUrl = "http://localhost:8000/api/";
-        let userEmail = ""; // Stores the email globally to pass to the OTP endpoints
+        
+        // Persistent Device ID Engine
+        let deviceId = localStorage.getItem("device_id");
+        if (!deviceId) {
+            deviceId = "DEV_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem("device_id", deviceId);
+        }
+
+        let userEmail = "";        
+        let resetEmailState = "";  
+        let resetOtpState = "";    
 
         window.onload = async function() {
             const response = await fetch(baseUrl + "GetUser.php");
             const result = await response.json();
 
-            const loadingState = document.getElementById("loadingState");
-            const loginCard = document.getElementById("loginCard");
-
             if (!result.data || result.data.length === 0) {
                 window.location.href = "seed.html";
             } else {
-                loadingState.className = "d-none";
-                loginCard.className = "card";
+                document.getElementById("loadingState").className = "d-none";
+                document.getElementById("loginCard").className = "card";
             }
         };
 
-        // Phase 1: Submit Credentials
+        function showAlert(type, message) {
+            const alertBox = document.getElementById("loginAlert");
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = message;
+        }
+
+        function toggleFlow(targetState) {
+            document.getElementById("step1Form").className = "d-none";
+            document.getElementById("step2Form").className = "d-none";
+            document.getElementById("forgotStep1Form").className = "d-none";
+            document.getElementById("forgotStep2Form").className = "d-none";
+            document.getElementById("forgotStep3Form").className = "d-none";
+            document.getElementById("loginAlert").className = "d-none"; 
+
+            const title = document.getElementById("cardTitle");
+
+            if (targetState === 'loginStep1') {
+                title.textContent = "Attendance System";
+                document.getElementById("step1Form").className = "";
+                userEmail = ""; resetEmailState = ""; resetOtpState = "";
+            } 
+            else if (targetState === 'forgotStep1') {
+                title.textContent = "Reset Password";
+                document.getElementById("forgotStep1Form").className = "";
+            }
+            else if (targetState === 'forgotStep2') {
+                document.getElementById("forgotStep2Form").className = "";
+            }
+            else if (targetState === 'forgotStep3') {
+                document.getElementById("forgotStep3Form").className = "";
+            }
+        }
+
+        // Login Phase 1: Include Device ID for Strict Lockout check
         document.getElementById("step1Form").addEventListener("submit", async function(e) {
             e.preventDefault();
-            
-            const form = e.target;
-            const formData = new FormData(form);
             const btn = document.getElementById("loginBtn");
             const spinner = document.getElementById("loginSpinner");
             const text = document.getElementById("loginBtnText");
-            const alertBox = document.getElementById("loginAlert");
 
-            btn.disabled = true;
-            spinner.className = "spinner-border spinner-border-sm";
-            text.textContent = "Authenticating...";
-            alertBox.className = "alert d-none";
+            btn.disabled = true; spinner.className = "spinner-border spinner-border-sm"; text.textContent = "Authenticating...";
+            document.getElementById("loginAlert").className = "d-none";
+
+            const formData = new FormData(e.target);
+            formData.append("device_id", deviceId); // <-- Required for Lockout Method
 
             const response = await fetch(baseUrl + "LoginUser.php", {
-                method: "POST",
-                body: formData
+                method: "POST", body: formData
             });
             const result = await response.json();
 
-            btn.disabled = false;
-            spinner.className = "spinner-border spinner-border-sm d-none";
-            text.textContent = "Sign In";
+            btn.disabled = false; spinner.className = "spinner-border spinner-border-sm d-none"; text.textContent = "Sign In";
 
             if (result.status === "otp_sent") {
-                // Save email to global variable, hide Step 1, show Step 2
                 userEmail = result.email;
                 document.getElementById("step1Form").className = "d-none";
                 document.getElementById("step2Form").className = "";
-                
-                alertBox.className = "alert alert-success";
-                alertBox.textContent = result.message;
+                showAlert("success", result.message);
             } else {
-                alertBox.className = "alert alert-danger";
-                alertBox.textContent = result.message;
+                showAlert("danger", result.message); // Will display the "already logged in" error
             }
         });
 
-        // Phase 2: Verify OTP
+        // Login Phase 2: Attach Device ID to generate final session
         document.getElementById("step2Form").addEventListener("submit", async function(e) {
             e.preventDefault();
-            
-            const otpCode = document.getElementById("otp_code").value;
             const btn = document.getElementById("verifyBtn");
             const spinner = document.getElementById("verifySpinner");
             const text = document.getElementById("verifyBtnText");
-            const alertBox = document.getElementById("loginAlert");
 
-            btn.disabled = true;
-            spinner.className = "spinner-border spinner-border-sm";
-            text.textContent = "Verifying...";
-            alertBox.className = "alert d-none";
+            btn.disabled = true; spinner.className = "spinner-border spinner-border-sm"; text.textContent = "Verifying...";
+            document.getElementById("loginAlert").className = "d-none";
 
-            // Manually construct form data to include the globally stored email
             const formData = new FormData();
             formData.append("email", userEmail);
-            formData.append("otp_code", otpCode);
+            formData.append("otp_code", document.getElementById("otp_code").value);
+            formData.append("device_id", deviceId); // <-- Required to save to DB
 
             const response = await fetch(baseUrl + "VerifyOTP.php", {
-                method: "POST",
-                body: formData
+                method: "POST", body: formData
             });
             const result = await response.json();
 
-            btn.disabled = false;
-            spinner.className = "spinner-border spinner-border-sm d-none";
-            text.textContent = "Verify Code";
+            btn.disabled = false; spinner.className = "spinner-border spinner-border-sm d-none"; text.textContent = "Verify Code";
 
             if (result.status === "success") {
                 localStorage.setItem("user_token", result.token);
                 window.location.href = "users.html";
             } else {
-                alertBox.className = "alert alert-danger";
-                alertBox.textContent = result.message;
+                showAlert("danger", result.message);
             }
         });
 
-        // Auxiliary: Resend OTP
-        async function resendCode() {
-            const btn = document.getElementById("resendBtn");
-            const spinner = document.getElementById("resendSpinner");
-            const text = document.getElementById("resendBtnText");
-            const alertBox = document.getElementById("loginAlert");
+        // Reset Phase 1
+        document.getElementById("forgotStep1Form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById("resetReqBtn");
+            const spinner = document.getElementById("resetReqSpinner");
+            const text = document.getElementById("resetReqBtnText");
 
-            btn.disabled = true;
-            spinner.className = "spinner-border spinner-border-sm";
-            text.textContent = "Sending...";
-            alertBox.className = "alert d-none";
+            btn.disabled = true; spinner.className = "spinner-border spinner-border-sm"; text.textContent = "Sending...";
+            document.getElementById("loginAlert").className = "d-none";
 
-            const formData = new FormData();
-            formData.append("email", userEmail);
-
-            const response = await fetch(baseUrl + "ResendOTP.php", {
-                method: "POST",
-                body: formData
+            const response = await fetch(baseUrl + "RequestPasswordReset.php", {
+                method: "POST", body: new FormData(e.target)
             });
             const result = await response.json();
 
-            btn.disabled = false;
-            spinner.className = "spinner-border spinner-border-sm d-none";
-            text.textContent = "Resend Code";
+            btn.disabled = false; spinner.className = "spinner-border spinner-border-sm d-none"; text.textContent = "Send Reset Code";
+
+            if (result.status === "otp_sent") {
+                resetEmailState = result.email; 
+                toggleFlow('forgotStep2');
+                showAlert("success", result.message);
+            } else {
+                showAlert("danger", result.message);
+            }
+        });
+
+        // Reset Phase 2
+        document.getElementById("forgotStep2Form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            resetOtpState = document.getElementById("resetOtpInput").value;
+            toggleFlow('forgotStep3');
+            document.getElementById("loginAlert").className = "d-none"; 
+        });
+
+        // Reset Phase 3
+        document.getElementById("forgotStep3Form").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            const newPass = document.getElementById("newPassword").value;
+            const confirmPass = document.getElementById("confirmPassword").value;
+
+            if (newPass !== confirmPass) {
+                showAlert("danger", "Passwords do not match. Please try again.");
+                return;
+            }
+
+            const btn = document.getElementById("resetFinalBtn");
+            const spinner = document.getElementById("resetFinalSpinner");
+            const text = document.getElementById("resetFinalBtnText");
+
+            btn.disabled = true; spinner.className = "spinner-border spinner-border-sm"; text.textContent = "Updating...";
+            document.getElementById("loginAlert").className = "d-none";
+
+            const formData = new FormData();
+            formData.append("email", resetEmailState);
+            formData.append("otp_code", resetOtpState);
+            formData.append("new_password", newPass);
+
+            const response = await fetch(baseUrl + "CompletePasswordReset.php", {
+                method: "POST", body: formData
+            });
+            const result = await response.json();
+
+            btn.disabled = false; spinner.className = "spinner-border spinner-border-sm d-none"; text.textContent = "Update Password";
 
             if (result.status === "success") {
-                alertBox.className = "alert alert-success";
-                alertBox.textContent = result.message;
-                document.getElementById("otp_code").value = ""; // Clear old input
+                toggleFlow('loginStep1');
+                showAlert("success", "Password updated successfully! You can now sign in.");
+                document.getElementById("forgotStep1Form").reset();
+                document.getElementById("forgotStep2Form").reset();
+                document.getElementById("forgotStep3Form").reset();
             } else {
-                alertBox.className = "alert alert-danger";
-                alertBox.textContent = result.message;
+                toggleFlow('forgotStep2');
+                showAlert("danger", result.message);
+            }
+        });
+
+        // Resend
+        async function resendCode(targetEmail, endpoint) {
+            document.getElementById("loginAlert").className = "d-none";
+            const formData = new FormData();
+            formData.append("email", targetEmail);
+
+            try {
+                let targetAPI = (endpoint === 'LoginUser.php') ? 'ResendOTP.php' : 'RequestPasswordReset.php';
+                const response = await fetch(baseUrl + targetAPI, { method: "POST", body: formData });
+                const result = await response.json();
+
+                if (result.status === "success" || result.status === "otp_sent") {
+                    showAlert("success", "A new code has been sent to your email.");
+                    document.getElementById("otp_code").value = "";
+                    document.getElementById("resetOtpInput").value = "";
+                } else {
+                    showAlert("danger", result.message);
+                }
+            } catch (error) {
+                showAlert("danger", "Network error. Failed to resend code.");
             }
         }
     </script>

@@ -63,4 +63,12 @@ trait Validation
 
         return "valid";
     }
+
+    public function ValidateReset(string $email)
+    {
+        if (empty(trim($email))) {
+            return "Error: Can not be empty";
+        }
+        return "valid";
+    }
 }

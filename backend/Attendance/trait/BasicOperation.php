@@ -121,13 +121,46 @@ trait BasicOperation
         return false;
     }
 
-    public function setOTP(string $email, ?string $otp_code, ?string $otp_expiry) 
+    public function setOTP(string $email, ?string $otp_code, ?string $otp_expiry)
     {
         $sql = "UPDATE users SET otp_code = ?, otp_expiry = ? WHERE email = ?";
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param("sss", $otp_code, $otp_expiry, $email);
         $result = $stmt->execute();
-        
+
         return $result !== false;
+    }
+
+    public function updatePassword($new_password, $email)
+    {
+        $sql = "UPDATE users SET password = ? WHERE email = ?";
+        $prepare = $this->connection->prepare($sql);
+        $prepare->bind_param("ss", $new_password, $email);
+        $results = $prepare->execute();
+        return $results;
+    }
+
+    public function setDeviceAndToken(string $email, string $new_token, string $device_id)
+    {
+        $sql = "UPDATE users SET tokens = ?, current_device_id = ? WHERE email = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param("sss", $new_token, $device_id, $email);
+        $result = $stmt->execute();
+
+        return $result !== false;
+    }
+
+    public function logoutDevice(string $token) 
+    {
+        $sql = "UPDATE users SET tokens = NULL, current_device_id = NULL WHERE tokens = ?";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param("s", $token);
+        $result = $stmt->execute();
+        
+        if ($stmt->affected_rows > 0) {
+            return ["status" => "success", "message" => "Successfully logged out."];
+        } else {
+            return ["status" => "error", "message" => "Invalid session or already logged out."];
+        }
     }
 }

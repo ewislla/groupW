@@ -9,28 +9,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-include_once('../model/User.php');
+require_once __DIR__ . '/../model/User.php';
 
 $userModel = new User();
 
-$email = isset($_POST['email']) ? trim($_POST['email']) : '';
-$otp_code = isset($_POST['otp_code']) ? trim($_POST['otp_code']) : '';
-$device_id = isset($_POST['device_id']) ? trim($_POST['device_id']) : '';
 
-if (empty($email) || empty($otp_code) || empty($device_id)) {
+$token = isset($_POST['token']) ? trim($_POST['token']) : '';
+
+if (empty($token)) {
     http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Email, OTP, and Device ID are required"]);
+    echo json_encode(["status" => "error", "message" => "Authentication token is required to log out."]);
     exit();
 }
 
-$result = $userModel->verifyOTP($email, $otp_code, $device_id);
+$result = $userModel->logoutUser($token);
 
 if (isset($result['status']) && $result['status'] === 'success') {
     http_response_code(200);
 } else {
-    http_response_code(401);
+    http_response_code(400);
 }
 
 echo json_encode($result);
-
-

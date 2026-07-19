@@ -9,28 +9,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit();
 }
 
-include_once('../model/User.php');
+require_once __DIR__ . '/../model/User.php';
 
 $userModel = new User();
 
 $email = isset($_POST['email']) ? trim($_POST['email']) : '';
-$password = isset($_POST['password']) ? trim($_POST['password']) : '';
-$device_id = isset($_POST['device_id']) ? trim($_POST['device_id']) : '';
+$otp_code = isset($_POST['otp_code']) ? trim($_POST['otp_code']) : '';
+$new_password = isset($_POST['new_password']) ? trim($_POST['new_password']) : '';
 
-if (empty($email) || empty($password) || empty($device_id)) {
+if (empty($email) || empty($otp_code) || empty($new_password)) {
     http_response_code(400);
-    echo json_encode(["status" => "error", "message" => "Email, password, and Device ID are required"]);
+    echo json_encode(["status" => "error", "message" => "Email, OTP code, and new password are required"]);
     exit();
 }
 
+$result = $userModel->completePasswordReset($email, $otp_code, $new_password);
 
-$result = $userModel->loginUser($email, $password, $device_id);
-
-
-if (isset($result['status']) && $result['status'] === 'otp_sent') {
+// Check for final "success" status
+if (isset($result['status']) && $result['status'] === 'success') {
     http_response_code(200);
 } else {
     http_response_code(401);
 }
 
 echo json_encode($result);
+?>

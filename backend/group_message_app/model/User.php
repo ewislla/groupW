@@ -20,7 +20,7 @@ class User extends Connection
     }
 
     //register user function
-    public function registerUser(string $name, string $password)
+    public function registerUser(string $name, string $email, string $password)
     {
         //validate the inputs
         $isValid = $this->validateRegistration($name, $password);
@@ -32,7 +32,7 @@ class User extends Connection
 
         // check db to see if the user already exists
         if ($this->recordExists($this->table_name, $this->column1, $name)) {
-        
+
             return ["status" => "error", "message" => "User already exists"];
         }
 
@@ -42,17 +42,20 @@ class User extends Connection
         //generate api token
         $token = bin2hex(random_bytes(32));
 
-        //insert the user into the database
-        $this->insertOperation(
+
+        $this->insertFourColumns(
             $this->table_name,
-            $this->column1,
-            $this->column2,
-            $this->column3,
+            'name',
+            'email',
+            'password',
+            'api_token',
             $name,
+            $email,
             $hashedPassword,
             $token,
-            'sss'
+            'ssss' // 4 strings
         );
+
 
         $newUserId = $this->connection->insert_id;
 
@@ -105,5 +108,17 @@ class User extends Connection
         } else {
             return ["status" => "error", "message" => "Incorrect password"];
         }
+    }
+
+    // Fetch all user emails except the current sender
+    public function getAllEmailsExcept(int $excludeUserId)
+    {
+        $sql = "SELECT email FROM " . $this->table_name . " WHERE user_id != ? AND email IS NOT NULL AND email != ''";
+        $stmt = $this->connection->prepare($sql);
+        $stmt->bind_param("i", $excludeUserId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
 }

@@ -22,7 +22,30 @@ trait BasicOperation
         return $results;
     }
 
+    // New method specifically for 4-column inserts (like User Registration)
+    public function insertFourColumns(
+        string $table_name,
+        string $column1,
+        string $column2,
+        string $column3,
+        string $column4,
+        $value1,
+        $value2,
+        $value3,
+        $value4,
+        string $types
+    ) {
+        $sql = "INSERT INTO $table_name($column1, $column2, $column3, $column4) VALUES(?,?,?,?)";
+        $prepare = $this->connection->prepare($sql);
 
+        $prepare->bind_param($types, $value1, $value2, $value3, $value4);
+        $results = $prepare->execute();
+
+        if ($results === false) {
+            die('Error in adding to db');
+        }
+        return $results;
+    }
     public function recordExists(string $table_name, string $column1, string $value)
     {
         $sql = "SELECT * FROM $table_name WHERE $column1 = ?";
@@ -68,14 +91,14 @@ trait BasicOperation
         string $where_column,
         $new_value,
         $where_value,
-        string $types 
+        string $types
     ) {
         $sql = "UPDATE $table_name SET $column_to_update = ? WHERE $where_column = ?";
         $prepare = $this->connection->prepare($sql);
-        
+
         $prepare->bind_param($types, $new_value, $where_value);
         $results = $prepare->execute();
-        
+
         if ($results === false) {
             return false;
         }

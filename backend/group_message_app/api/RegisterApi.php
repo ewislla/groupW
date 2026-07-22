@@ -21,10 +21,12 @@ class RegisterApi
     public function processRequest()
     {
         $name = $_POST['name'] ?? '';
+
+        $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
 
 
-        $response = $this->userModel->registerUser($name, $password);
+        $response = $this->userModel->registerUser($name, $email, $password);
 
         echo json_encode($response);
     }

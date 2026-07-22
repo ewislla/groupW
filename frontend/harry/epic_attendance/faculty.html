@@ -5,20 +5,21 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manage Faculties</title>
+  
+  <!-- IMMEDIATE AUTHENTICATION CHECK -->
+  <script>
+    if (!localStorage.getItem("user_token")) {
+      window.location.replace("login.html");
+    }
+  </script>
+
   <!-- Standard Bootstrap 5 CSS -->
   <link href="../group_message_app/bootstrap/bootstrap.min.css" rel="stylesheet">
 
   <style>
     body {
       background-color: #f8f9fa;
-      font-family:
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        Roboto,
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
     .sidebar {
@@ -144,15 +145,51 @@
   <script>
     var baseUrl = "http://localhost:8000/api/";
 
-    function logout() {
-      localStorage.removeItem("access_token");
-      window.location.href = "login.html";
+    // ADDED: Header generation for secure API calls
+    function getHeaders(isJson) {
+      var headers = {};
+      var token = localStorage.getItem("user_token");
+      if (token) {
+        headers["Authorization"] = "Bearer " + token;
+      }
+      if (isJson) {
+        headers["Content-Type"] = "application/json";
+      }
+      return headers;
+    }
+
+    // UPDATED LOGOUT LOGIC: Safely releases the 1-Device-Per-User lock
+    async function logout() {
+      var token = localStorage.getItem("user_token");
+      if (token) {
+        var formData = new FormData();
+        formData.append("token", token);
+        try {
+          await fetch(baseUrl + "LogoutUser.php", {
+            method: "POST",
+            body: formData
+          });
+        } catch (e) {
+          console.error("Logout API failed, continuing local clear.");
+        }
+      }
+      localStorage.removeItem("user_token");
+      window.location.replace("login.html");
     }
 
     // Fetch Faculties Logic
     async function fetchFaculties() {
       try {
-        var response = await fetch(baseUrl + "GetFaculty.php");
+        var response = await fetch(baseUrl + "GetFaculty.php", {
+            method: "GET",
+            headers: getHeaders(false)
+        });
+
+        if (response.status === 401) {
+            logout();
+            return;
+        }
+
         var result = await response.json();
         var tbody = document.getElementById("facultyTableBody");
         tbody.innerHTML = "";
@@ -163,19 +200,11 @@
             var tr = document.createElement("tr");
 
             tr.innerHTML =
-              "<td>#" +
-              faculty.faculty_id +
-              "</td>" +
-              "<td class='fw-medium'>" +
-              faculty.name +
-              "</td>" +
+              "<td>#" + faculty.faculty_id + "</td>" +
+              "<td class='fw-medium'>" + faculty.name + "</td>" +
               "<td class='text-end'>" +
               "<button class='btn btn-sm btn-outline-secondary' " +
-              "onclick='openEditModal(" +
-              faculty.faculty_id +
-              ', "' +
-              faculty.name +
-              "\")'>Edit</button>" +
+              "onclick='openEditModal(" + faculty.faculty_id + ', "' + faculty.name + "\")'>Edit</button>" +
               "</td>";
 
             tbody.appendChild(tr);
@@ -191,9 +220,7 @@
     }
 
     // Add Faculty Logic
-    document
-      .getElementById("facultyForm")
-      .addEventListener("submit", async function (e) {
+    document.getElementById("facultyForm").addEventListener("submit", async function (e) {
         e.preventDefault();
 
         var form = e.target;
@@ -204,25 +231,31 @@
         var alertBox = document.getElementById("alertBox");
 
         submitBtn.disabled = true;
-        btnSpinner.className = "spinner-border spinner-border-sm"; // Shows spinner by removing d-none
+        btnSpinner.className = "spinner-border spinner-border-sm";
         btnText.textContent = "Saving...";
         alertBox.className = "alert d-none";
 
         try {
           var response = await fetch(baseUrl + "AddFaculty.php", {
             method: "POST",
+            headers: getHeaders(false),
             body: formData,
           });
+
+          if (response.status === 401) {
+             logout();
+             return;
+          }
+
           var result = await response.json();
 
           submitBtn.disabled = false;
-          btnSpinner.className = "spinner-border spinner-border-sm d-none"; // Hides spinner
+          btnSpinner.className = "spinner-border spinner-border-sm d-none";
           btnText.textContent = "Add Faculty";
 
           if (result.status === "success" || result.status === 201) {
             alertBox.className = "alert alert-success";
-            alertBox.textContent =
-              result.message || "Faculty added successfully";
+            alertBox.textContent = result.message || "Faculty added successfully";
             form.reset();
             fetchFaculties();
           } else {
@@ -243,16 +276,12 @@
       document.getElementById("edit_faculty_id").value = id;
       document.getElementById("edit_name").value = name;
 
-      var editModal = new bootstrap.Modal(
-        document.getElementById("editModal"),
-      );
+      var editModal = new bootstrap.Modal(document.getElementById("editModal"));
       editModal.show();
     }
 
     // Edit Faculty Submit Logic
-    document
-      .getElementById("editFacultyForm")
-      .addEventListener("submit", async function (e) {
+    document.getElementById("editFacultyForm").addEventListener("submit", async function (e) {
         e.preventDefault();
 
         var id = document.getElementById("edit_faculty_id").value;
@@ -286,11 +315,14 @@
       try {
         var response = await fetch(baseUrl + "EditFaculty.php", {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: getHeaders(true),
           body: JSON.stringify(payload),
         });
+
+        if (response.status === 401) {
+             logout();
+             return;
+        }
 
         var result = await response.json();
 
@@ -309,5 +341,4 @@
     };
   </script>
 </body>
-
 </html>

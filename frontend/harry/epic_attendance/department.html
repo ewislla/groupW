@@ -5,10 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Departments</title>
+
+    <!-- IMMEDIATE AUTHENTICATION CHECK -->
+    <script>
+      if (!localStorage.getItem("user_token")) {
+        window.location.replace("login.html");
+      }
+    </script>
+
     <!-- Standard Bootstrap 5 CSS -->
     <link href="../group_message_app/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* Clean, neutral styling without the previous custom colors */
         body {
             background-color: #f8f9fa;
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -17,7 +24,6 @@
         .sidebar {
             min-height: 100vh;
             background-color: #212529;
-            /* Standard dark slate */
         }
 
         .sidebar a {
@@ -78,7 +84,7 @@
                         </thead>
                         <tbody id="tableBody">
                             <tr>
-                                <td colspan="4" class="text-center text-muted">Loading data...</td>
+                                <td colspan="4" class="text-center text-muted py-4">Loading data...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -124,10 +130,11 @@
         var baseUrl = 'http://localhost:8000/api/';
         var bootstrapModal = new bootstrap.Modal(document.getElementById('dataModal'));
 
-        // Helper to get headers (attaches token if available)
+        // Helper to get headers
         function getHeaders(isJson) {
             var headers = {};
-            var token = localStorage.getItem('access_token');
+            // Updated to user_token
+            var token = localStorage.getItem('user_token');
             if (token) {
                 headers['Authorization'] = 'Bearer ' + token;
             }
@@ -143,15 +150,35 @@
                 '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
         }
 
-        function logout() {
-            localStorage.removeItem('access_token');
-            window.location.href = 'login.html';
+        // UPDATED LOGOUT LOGIC: Safely releases the 1-Device-Per-User lock
+        async function logout() {
+          var token = localStorage.getItem("user_token");
+          if (token) {
+            var formData = new FormData();
+            formData.append("token", token);
+            try {
+              await fetch(baseUrl + "LogoutUser.php", {
+                method: "POST",
+                body: formData
+              });
+            } catch (e) {
+              console.error("Logout API failed, continuing local clear.");
+            }
+          }
+          localStorage.removeItem("user_token");
+          window.location.replace("login.html");
         }
 
         // Fetch faculties for the dropdown menu
         async function loadFaculties() {
             try {
                 var response = await fetch(baseUrl + 'GetFaculty.php', { method: 'GET', headers: getHeaders(false) });
+                
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+
                 var result = await response.json();
                 var select = document.getElementById('faculty_id');
 
@@ -176,6 +203,12 @@
         async function loadDepartments() {
             try {
                 var response = await fetch(baseUrl + 'GetDepartment.php', { method: 'GET', headers: getHeaders(false) });
+                
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
+
                 var result = await response.json();
                 var tbody = document.getElementById('tableBody');
                 tbody.innerHTML = '';
@@ -228,7 +261,6 @@
             var bodyData = null;
 
             if (id) {
-                // Edit format requires JSON
                 endpoint = 'EditDepartment.php';
                 method = 'PUT';
                 headers = getHeaders(true);
@@ -238,7 +270,6 @@
                     faculty_id: parseInt(facultyId)
                 });
             } else {
-                // Add format requires FormData
                 endpoint = 'AddDepartment.php';
                 method = 'POST';
                 headers = getHeaders(false);
@@ -253,6 +284,11 @@
                     headers: headers,
                     body: bodyData
                 });
+
+                if (response.status === 401) {
+                    logout();
+                    return;
+                }
 
                 var result = await response.json();
 
@@ -269,7 +305,6 @@
             }
         });
 
-        // Initialize data on page load
         window.onload = function () {
             loadFaculties();
             loadDepartments();

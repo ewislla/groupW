@@ -63,3 +63,7 @@ ADD COLUMN otp_expiry DATETIME NULL AFTER otp_code;
 
 ALTER TABLE users 
 ADD COLUMN current_device_id VARCHAR(100) NULL AFTER tokens;
+
+
+ALTER TABLE users
+MODIFY COLUMN active ENUM('true', 'false') NOT NULL;

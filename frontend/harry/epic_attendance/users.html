@@ -1,313 +1,384 @@
 <!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Manage Users</title>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manage Users</title>
-  <!-- Standard Bootstrap 5 CSS -->
-  <link href="../group_message_app/bootstrap/bootstrap.min.css" rel="stylesheet" />
-  <style>
-    body {
-      background-color: #f8f9fa;
-      font-family:
-        system-ui,
-        -apple-system,
-        "Segoe UI",
-        Roboto,
-        "Helvetica Neue",
-        Arial,
-        sans-serif;
-    }
-
-    .sidebar {
-      min-height: 100vh;
-      background-color: #212529;
-    }
-
-    .sidebar a {
-      color: #adb5bd;
-      text-decoration: none;
-      padding: 10px 15px;
-      display: block;
-      border-radius: 4px;
-      margin-bottom: 5px;
-    }
-
-    .sidebar a:hover,
-    .sidebar a.active {
-      background-color: #343a40;
-      color: #ffffff;
-    }
-
-    .card {
-      border: none;
-      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
-      border-radius: 8px;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="d-flex">
-    <!-- Sidebar Navigation -->
-    <div class="sidebar p-3" style="width: 250px">
-      <h5 class="text-white mb-4 fw-bold">Admin Portal</h5>
-      <a href="faculty.html">Faculties</a>
-      <a href="department.html">Departments</a>
-      <a href="users.html" class="active">Users</a>
-      <hr class="text-secondary" />
-      <a href="#" onclick="logout()" class="text-danger">Logout</a>
-    </div>
-
-    <!-- Main Content Area -->
-    <div class="flex-grow-1 p-4 p-md-5">
-      <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="fw-bold text-dark m-0">System Users</h3>
-        <button class="btn btn-primary shadow-sm" onclick="openModal()">
-          + Add User
-        </button>
-      </div>
-
-      <div id="alertBox"></div>
-
-      <!-- Data Table -->
-      <div class="card p-4">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle">
-            <thead class="table-light">
-              <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr>
-                <td colspan="5" class="text-center text-muted py-4">
-                  Loading data...
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Add User Modal -->
-  <div class="modal fade" id="dataModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content border-0 shadow">
-        <div class="modal-header border-bottom-0">
-          <h5 class="modal-title fw-bold">Add System User</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <form id="dataForm">
-            <div class="row">
-              <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">First Name</label>
-                <input type="text" id="first_name" class="form-control bg-light" required />
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">Last Name</label>
-                <input type="text" id="last_name" class="form-control bg-light" required />
-              </div>
-              <div class="col-md-4 mb-3">
-                <label class="form-label fw-semibold">Middle Name</label>
-                <input type="text" id="middle_name" class="form-control bg-light" placeholder="(Optional)" />
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Email Address</label>
-                <input type="email" id="email" class="form-control bg-light" required />
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Password</label>
-                <input type="password" id="password" class="form-control bg-light" required minlength="6" />
-              </div>
-            </div>
-
-            <div class="row mb-4">
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Role</label>
-                <select id="role" class="form-select bg-light" required>
-                  <option value="Admin">Admin</option>
-                  <option value="Moderator">Moderator</option>
-                </select>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Account Status</label>
-                <select id="active" class="form-select bg-light" required>
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-              Register User
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="../group_message_app/bootstrap/js/bootstrap.bundle.js"></script>
-  <script>
-    var baseUrl = "http://localhost:8000/api/";
-    var bootstrapModal = new bootstrap.Modal(
-      document.getElementById("dataModal"),
-    );
-
-    function getHeaders(isJson) {
-      var headers = {};
-      var token = localStorage.getItem("access_token");
-      if (token) {
-        headers["Authorization"] = "Bearer " + token;
+    <!-- IMMEDIATE AUTHENTICATION CHECK -->
+    <script>
+      // If the user_token is missing, bounce them to login immediately
+      // Using .replace() prevents them from using the back button to return here
+      if (!localStorage.getItem("user_token")) {
+        window.location.replace("login.html");
       }
-      if (isJson) {
-        headers["Content-Type"] = "application/json";
+    </script>
+
+    <!-- Standard Bootstrap 5 CSS -->
+    <link
+      href="../group_message_app/bootstrap/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background-color: #f8f9fa;
+        font-family:
+          system-ui,
+          -apple-system,
+          "Segoe UI",
+          Roboto,
+          "Helvetica Neue",
+          Arial,
+          sans-serif;
       }
-      return headers;
-    }
 
-    function showAlert(message, type) {
-      var alertBox = document.getElementById("alertBox");
-      alertBox.innerHTML =
-        '<div class="alert alert-' +
-        type +
-        ' alert-dismissible shadow-sm">' +
-        message +
-        '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
-    }
+      .sidebar {
+        min-height: 100vh;
+        background-color: #212529;
+      }
 
-    function logout() {
-      localStorage.removeItem("access_token");
-      window.location.href = "login.html";
-    }
+      .sidebar a {
+        color: #adb5bd;
+        text-decoration: none;
+        padding: 10px 15px;
+        display: block;
+        border-radius: 4px;
+        margin-bottom: 5px;
+      }
 
-    async function loadUsers() {
-      try {
-        var response = await fetch(baseUrl + "GetUser.php", {
-          method: "GET",
-          headers: getHeaders(false),
-        });
-        var result = await response.json();
-        var tbody = document.getElementById("tableBody");
-        tbody.innerHTML = "";
+      .sidebar a:hover,
+      .sidebar a.active {
+        background-color: #343a40;
+        color: #ffffff;
+      }
 
-        if (
-          result.status === "success" &&
-          result.data &&
-          result.data.length > 0
-        ) {
-          for (var i = 0; i < result.data.length; i++) {
-            var user = result.data[i];
-            var tr = document.createElement("tr");
+      .card {
+        border: none;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+      }
+    </style>
+  </head>
 
-            // Handle formatting the active badge
-            var statusBadge =
-              user.active === "true"
-                ? '<span class="badge bg-success">Active</span>'
-                : '<span class="badge bg-secondary">Inactive</span>';
+  <body>
+    <div class="d-flex">
+      <!-- Sidebar Navigation -->
+      <div class="sidebar p-3" style="width: 250px">
+        <h5 class="text-white mb-4 fw-bold">Admin Portal</h5>
+        <a href="faculty.html">Faculties</a>
+        <a href="department.html">Departments</a>
+        <a href="users.html" class="active">Users</a>
+        <hr class="text-secondary" />
+        <a href="#" onclick="logout()" class="text-danger">Logout</a>
+      </div>
 
-            tr.innerHTML =
-              "<td>#" +
-              user.user_id +
-              "</td>" +
-              '<td class="fw-medium">' +
-              user.first_name +
-              " " +
-              user.last_name +
-              "</td>" +
-              "<td>" +
-              user.email +
-              "</td>" +
-              "<td>" +
-              user.role +
-              "</td>" +
-              "<td>" +
-              statusBadge +
-              "</td>";
+      <!-- Main Content Area -->
+      <div class="flex-grow-1 p-4 p-md-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold text-dark m-0">System Users</h3>
+          <button class="btn btn-primary shadow-sm" onclick="openModal()">
+            + Add User
+          </button>
+        </div>
 
-            tbody.appendChild(tr);
-          }
-        } else {
-          tbody.innerHTML =
-            '<tr><td colspan="5" class="text-center text-muted py-4">No users found.</td></tr>';
+        <div id="alertBox"></div>
+
+        <!-- Data Table -->
+        <div class="card p-4">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody">
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">
+                    Loading data...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="dataModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-bottom-0">
+            <h5 class="modal-title fw-bold">Add System User</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <form id="dataForm">
+              <div class="row">
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">First Name</label>
+                  <input
+                    type="text"
+                    id="first_name"
+                    class="form-control bg-light"
+                    required
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">Last Name</label>
+                  <input
+                    type="text"
+                    id="last_name"
+                    class="form-control bg-light"
+                    required
+                  />
+                </div>
+                <div class="col-md-4 mb-3">
+                  <label class="form-label fw-semibold">Middle Name</label>
+                  <input
+                    type="text"
+                    id="middle_name"
+                    class="form-control bg-light"
+                    placeholder="(Optional)"
+                  />
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Email Address</label>
+                  <input
+                    type="email"
+                    id="email"
+                    class="form-control bg-light"
+                    required
+                  />
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Password</label>
+                  <input
+                    type="password"
+                    id="password"
+                    class="form-control bg-light"
+                    required
+                    minlength="6"
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-4">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Role</label>
+                  <select id="role" class="form-select bg-light" required>
+                    <option value="Admin">Admin</option>
+                    <option value="Moderator">Moderator</option>
+                  </select>
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label fw-semibold">Account Status</label>
+                  <select id="active" class="form-select bg-light" required>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                class="btn btn-primary w-100 py-2 fw-semibold"
+              >
+                Register User
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="../group_message_app/bootstrap/js/bootstrap.bundle.js"></script>
+    <script>
+      var baseUrl = "http://localhost:8000/api/";
+      var bootstrapModal = new bootstrap.Modal(
+        document.getElementById("dataModal"),
+      );
+
+      function getHeaders(isJson) {
+        var headers = {};
+        // Synchronized to use 'user_token' matching the login page
+        var token = localStorage.getItem("user_token");
+        if (token) {
+          headers["Authorization"] = "Bearer " + token;
         }
-      } catch (error) {
-        console.error("User fetch error:", error);
-        document.getElementById("tableBody").innerHTML =
-          '<tr><td colspan="5" class="text-center text-danger py-4">Failed to load data.</td></tr>';
+        if (isJson) {
+          headers["Content-Type"] = "application/json";
+        }
+        return headers;
       }
-    }
 
-    function openModal() {
-      // Reset the form manually since we are only adding users
-      document.getElementById("dataForm").reset();
-      bootstrapModal.show();
-    }
+      function showAlert(message, type) {
+        var alertBox = document.getElementById("alertBox");
+        alertBox.innerHTML =
+          '<div class="alert alert-' +
+          type +
+          ' alert-dismissible shadow-sm">' +
+          message +
+          '<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>';
+      }
 
-    document
-      .getElementById("dataForm")
-      .addEventListener("submit", async function (e) {
-        e.preventDefault();
+      // UPDATED LOGOUT LOGIC: Safely releases the 1-Device-Per-User lock
+      async function logout() {
+        var token = localStorage.getItem("user_token");
+        if (token) {
+          var formData = new FormData();
+          formData.append("token", token);
+          try {
+            // Notify the backend to destroy the session and release the device
+            await fetch(baseUrl + "LogoutUser.php", {
+              method: "POST",
+              body: formData,
+            });
+          } catch (e) {
+            console.error("Logout API failed, continuing local clear.");
+          }
+        }
+        localStorage.removeItem("user_token");
+        window.location.replace("login.html");
+      }
 
-        var formData = new FormData();
-        formData.append(
-          "first_name",
-          document.getElementById("first_name").value,
-        );
-        formData.append(
-          "last_name",
-          document.getElementById("last_name").value,
-        );
-        formData.append(
-          "middle_name",
-          document.getElementById("middle_name").value,
-        );
-        formData.append("email", document.getElementById("email").value);
-        formData.append(
-          "password",
-          document.getElementById("password").value,
-        );
-        formData.append("role", document.getElementById("role").value);
-        formData.append("active", document.getElementById("active").value);
-
+      async function loadUsers() {
         try {
-          var response = await fetch(baseUrl + "AddUser.php", {
-            method: "POST",
+          var response = await fetch(baseUrl + "GetUser.php", {
+            method: "GET",
             headers: getHeaders(false),
-            body: formData,
           });
 
-          var result = await response.json();
+          // Check for Unauthorized status to catch expired/invalid tokens mid-session
+          if (response.status === 401) {
+            logout();
+            return;
+          }
 
-          if (result.status === "success") {
-            bootstrapModal.hide();
-            showAlert(result.message, "success");
-            loadUsers();
+          var result = await response.json();
+          var tbody = document.getElementById("tableBody");
+          tbody.innerHTML = "";
+
+          if (
+            result.status === "success" &&
+            result.data &&
+            result.data.length > 0
+          ) {
+            for (var i = 0; i < result.data.length; i++) {
+              var user = result.data[i];
+              var tr = document.createElement("tr");
+
+              var statusBadge =
+                user.active === "true"
+                  ? '<span class="badge bg-success">Active</span>'
+                  : '<span class="badge bg-secondary">Inactive</span>';
+
+              tr.innerHTML =
+                "<td>#" +
+                user.user_id +
+                "</td>" +
+                '<td class="fw-medium">' +
+                user.first_name +
+                " " +
+                user.last_name +
+                "</td>" +
+                "<td>" +
+                user.email +
+                "</td>" +
+                "<td>" +
+                user.role +
+                "</td>" +
+                "<td>" +
+                statusBadge +
+                "</td>";
+
+              tbody.appendChild(tr);
+            }
           } else {
-            showAlert(result.message || "Operation failed.", "danger");
+            tbody.innerHTML =
+              '<tr><td colspan="5" class="text-center text-muted py-4">No users found.</td></tr>';
           }
         } catch (error) {
-          console.error("Submit error:", error);
-          showAlert("Network error occurred. Check console.", "danger");
+          console.error("User fetch error:", error);
+          document.getElementById("tableBody").innerHTML =
+            '<tr><td colspan="5" class="text-center text-danger py-4">Failed to load data.</td></tr>';
         }
-      });
+      }
 
-    window.onload = function () {
-      loadUsers();
-    };
-  </script>
-</body>
+      function openModal() {
+        document.getElementById("dataForm").reset();
+        bootstrapModal.show();
+      }
 
+      document
+        .getElementById("dataForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          var formData = new FormData();
+          formData.append(
+            "first_name",
+            document.getElementById("first_name").value,
+          );
+          formData.append(
+            "last_name",
+            document.getElementById("last_name").value,
+          );
+          formData.append(
+            "middle_name",
+            document.getElementById("middle_name").value,
+          );
+          formData.append("email", document.getElementById("email").value);
+          formData.append(
+            "password",
+            document.getElementById("password").value,
+          );
+          formData.append("role", document.getElementById("role").value);
+          formData.append("active", document.getElementById("active").value);
+
+          try {
+            var response = await fetch(baseUrl + "AddUser.php", {
+              method: "POST",
+              headers: getHeaders(false),
+              body: formData,
+            });
+
+            // Catch expired tokens during form submission
+            if (response.status === 401) {
+              logout();
+              return;
+            }
+
+            var result = await response.json();
+
+            if (result.status === "success") {
+              bootstrapModal.hide();
+              showAlert(result.message, "success");
+              loadUsers();
+            } else {
+              showAlert(result.message || "Operation failed.", "danger");
+            }
+          } catch (error) {
+            console.error("Submit error:", error);
+            showAlert("Network error occurred. Check console.", "danger");
+          }
+        });
+
+      window.onload = function () {
+        loadUsers();
+      };
+    </script>
+  </body>
 </html>

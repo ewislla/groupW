@@ -12,7 +12,7 @@ trait MailerTrait
 
         try {
             // Server settings
-            $mail->SMTPDebug  = 0;
+            $mail->SMTPDebug  = 2;
             $mail->isSMTP();
             $mail->Host       = 'smtp-wisdomit.alwaysdata.net';
             $mail->SMTPAuth   = true;
@@ -42,4 +42,3 @@ trait MailerTrait
         }
     }
 }
-?>

@@ -156,7 +156,7 @@
       
       .temp-msg .msg-bubble { opacity: 0.7; }
 
-      /* Edit Button UI */
+      /* Actions UI */
       .msg-actions {
         display: flex;
         gap: 8px;
@@ -166,7 +166,7 @@
         transition: opacity 0.2s;
         justify-content: flex-end;
       }
-      .me:hover .msg-actions { opacity: 1; }
+      .msg-wrapper:hover .msg-actions { opacity: 1; }
 
       .edit-btn {
         background: transparent !important;
@@ -180,6 +180,54 @@
         box-shadow: none !important;
       }
       .edit-btn:hover { text-decoration: underline; color: var(--primary-hover) !important; }
+
+      /* --- Reactions UI --- */
+      .reaction-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: -8px;
+        margin-bottom: 8px;
+        z-index: 2;
+      }
+      .reaction-bar.me { justify-content: flex-end; }
+      .reaction-bar.them { justify-content: flex-start; }
+
+      .reaction-badge {
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid var(--glass-border);
+        border-radius: 12px;
+        padding: 2px 8px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        transition: transform 0.1s;
+      }
+      .reaction-badge:active { transform: scale(0.9); }
+      .reaction-badge.active-reaction {
+        background: #e0e7ff;
+        border-color: var(--primary);
+        color: var(--primary);
+      }
+
+      /* Reaction Popup Menu */
+      #emoji-picker {
+        position: absolute;
+        background: white;
+        border-radius: 20px;
+        padding: 8px 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        display: flex;
+        gap: 8px;
+        z-index: 1000;
+        border: 1px solid rgba(0,0,0,0.05);
+      }
+      .emoji-option {
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .emoji-option:hover { transform: scale(1.3); }
 
       /* Input Area */
       .chat-footer { padding: 20px 30px; background: transparent; padding-bottom: 30px; }
@@ -229,23 +277,42 @@
     </style>
   </head>
   <body>
+    <!-- AUTH VIEW -->
     <div id="auth-view" class="card">
       <h3 id="auth-title" class="text-center">Welcome Back</h3>
-      <p class="text-center text-muted mb-4">Sign in to GroupW to continue</p>
+      <p id="auth-subtitle" class="text-center text-muted mb-4">Sign in to GroupW to continue</p>
+      
       <form id="auth-form">
-        <div class="mb-3"><input type="text" id="username" class="form-control" placeholder="Username" required autocomplete="off" /></div>
-        <div class="mb-4"><input type="password" id="password" class="form-control" placeholder="Password" required /></div>
+        <!-- Username Field -->
+        <div class="mb-3">
+          <input type="text" id="username" class="form-control" placeholder="Username" required autocomplete="off" />
+        </div>
+        
+        <!-- Email Field (Hidden by default) -->
+        <div class="mb-3 d-none" id="email-group">
+          <input type="email" id="email" class="form-control" placeholder="Email Address" autocomplete="off" />
+        </div>
+        
+        <!-- Password Field -->
+        <div class="mb-4">
+          <input type="password" id="password" class="form-control" placeholder="Password" required />
+        </div>
+        
         <div id="auth-error" class="alert alert-danger d-none p-2 text-center" style="font-size: 0.85rem; border-radius: 10px"></div>
+        
+        <!-- Submit Button -->
         <button type="submit" id="auth-btn" class="btn btn-primary w-100 d-flex justify-content-center align-items-center gap-2">
           <span id="auth-btn-text">Login</span>
           <span id="auth-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
         </button>
       </form>
+      
       <p class="text-center mt-4 mb-0">
         <a href="#" id="toggle-auth" class="text-decoration-none" style="color: var(--primary); font-weight: 500; font-size: 0.9rem">Create an account</a>
       </p>
     </div>
 
+    <!-- CHAT VIEW -->
     <div id="chat-view" class="card d-none">
       <div class="chat-header">
         <div>
@@ -275,6 +342,7 @@
       </div>
     </div>
 
+    <!-- EDIT MESSAGE DIALOG -->
     <div id="custom-edit-modal" class="d-none">
       <div class="modal-overlay" id="close-modal-overlay"></div>
       <div class="modal-box card">
@@ -286,6 +354,16 @@
           <button class="btn btn-primary" id="save-modal-btn" style="border-radius: 12px; padding: 10px 20px;">Save Changes</button>
         </div>
       </div>
+    </div>
+
+    <!-- EMOJI PICKER -->
+    <div id="emoji-picker" class="d-none">
+      <span class="emoji-option">👍</span>
+      <span class="emoji-option">❤️</span>
+      <span class="emoji-option">😂</span>
+      <span class="emoji-option">😮</span>
+      <span class="emoji-option">😢</span>
+      <span class="emoji-option">🔥</span>
     </div>
 
     <script src="script.js"></script>

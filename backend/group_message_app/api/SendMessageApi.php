@@ -43,7 +43,7 @@ class SendMessageApi
 
         // Validate the user
         $user = $this->userModel->getUserByToken($token);
-        $userId = $user['user_id'] ?? $user['id'] ?? null;
+        $userId = $user['user_id'] ?? $user['user_id'] ?? null;
 
         if (!$userId) {
             echo json_encode(["status" => "error", "message" => "Unauthorized."]);
@@ -55,10 +55,10 @@ class SendMessageApi
 
         // 3. IF SUCCESSFUL: Trigger the Email Blast
         if ($response['status'] === 'success') {
-            
+
             // Get all other users' emails
             $otherUsers = $this->userModel->getAllEmailsExcept((int)$userId);
-            
+
             if (count($otherUsers) > 0) {
                 $senderName = $user['name'] ?? 'Someone';
                 $subject = "New Message from $senderName in GroupW";
@@ -72,7 +72,7 @@ class SendMessageApi
                         <p><a href='http://127.0.0.1:5500/frontend/harry/group_message_app/index.html' style='background: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 8px; display: inline-block; margin-top: 10px;'>Open GroupW</a></p>
                     </div>
                 ";
-                
+
                 // Fire the trait method
                 $this->SendEmail($otherUsers, $subject, $htmlBody);
             }
@@ -84,4 +84,3 @@ class SendMessageApi
 
 $api = new SendMessageApi();
 $api->processRequest();
-?>

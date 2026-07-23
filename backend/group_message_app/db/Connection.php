@@ -2,7 +2,7 @@
 
 class Connection
 {
-    protected mysqli $connection;
+    public mysqli $connection;
 
     public function __construct()
     {

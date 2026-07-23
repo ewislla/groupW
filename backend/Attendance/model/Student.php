@@ -19,34 +19,39 @@ class Student extends Connection
         string $gender,
         string $matric_no,
         string $email,
-        string $password,
-        $dept_id,
-        $fac_id
+        string $level,
+        string $current_device_id, // NEW: Grabbed from the frontend
+        int $dept_id,
+        int $fac_id
     ) {
-        $validationResult = $this->ValidateStudentRegistration($first_name, $last_name, $gender, $matric_no, $email, $password, $dept_id, $fac_id);
+        // 1. Validate inputs (Ensure ValidateStudentRegistration handles the new parameters if needed)
+        $validationResult = $this->ValidateStudentRegistration($first_name, $last_name, $gender, $matric_no, $email,  $dept_id, $fac_id);
 
         if ($validationResult !== "valid") {
             return ["status" => "error", "message" => $validationResult];
         }
-        //check if email already exist
-        $emailExists = $this->recordExists('Students', 'email', $email);
-        if ($emailExists) {
-            return ["status" => "error", "message" => "A student with this email already exists"];
-        }
-        //check if matric number already exist
-        $matricExists = $this->recordExists('Students', 'matric_no', $matric_no);
-        if ($matricExists) {
-            return ["status" => "error", "message" => "This matriculation number is already registered"];
+
+        // 2. Prevent empty device IDs from sneaking through
+        if (empty(trim($current_device_id))) {
+            return ["status" => "error", "message" => "Device identification failed. Please ensure your browser allows local storage."];
         }
 
-        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+        // 3. Check for existing unique constraints
+        if ($this->recordExists('students', 'email', $email)) {
+            return ["status" => "error", "message" => "A student with this email already exists."];
+        }
 
-        $insertStatus = $this->insertStudent($first_name, $last_name, $middle_name, $gender, $matric_no, $email, $hashed_password, $dept_id, $fac_id);
+        if ($this->recordExists('students', 'matric_no', $matric_no)) {
+            return ["status" => "error", "message" => "This matriculation number is already registered."];
+        }
+
+        // 4. Execute the insert operation
+        $insertStatus = $this->InsertStudent($first_name, $last_name, $middle_name, $gender, $matric_no, $email, $level, $current_device_id, $dept_id, $fac_id);
 
         if ($insertStatus) {
-            return ["status" => "success", "message" => "Student registered successfully"];
+            return ["status" => "success", "message" => "Registration successful. Your device is now linked."];
         } else {
-            return ["status" => "error", "message" => "Failed to register student due to a database error"];
+            return ["status" => "error", "message" => "Failed to register student due to a database error."];
         }
     }
 }

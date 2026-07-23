@@ -85,14 +85,13 @@ trait BasicOperation
 
 
     //students operations 
-
-    public function InsertStudent($first_name, $last_name, $middle_name, $gender, $matric_no, $email, $hashed_password, $dept_id, $fac_id)
+    public function InsertStudent($first_name, $last_name, $middle_name, $gender, $matric_no, $email, $level, $current_device_id, $dept_id, $fac_id)
     {
-        $sql = "INSERT INTO Students(first_name, last_name, middle_name, gender, matric_no, email, password, department_id, faculty_id) VALUES ( ?, ?, ?, ?, ?, ?, ?, ?,? )";
+        $sql = "INSERT INTO students (first_name, last_name, middle_name, gender, matric_no, email, level, current_device_id, department_id, faculty_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $prepare = $this->connection->prepare($sql);
 
-        $prepare->bind_param("sssssssii", $first_name, $last_name, $middle_name, $gender, $matric_no, $email, $hashed_password, $dept_id, $fac_id);
+        $prepare->bind_param("ssssssssii", $first_name, $last_name, $middle_name, $gender, $matric_no, $email, $level, $current_device_id, $dept_id, $fac_id);
 
         return $prepare->execute();
     }
@@ -150,17 +149,83 @@ trait BasicOperation
         return $result !== false;
     }
 
-    public function logoutDevice(string $token) 
+    public function logoutDevice(string $token)
     {
         $sql = "UPDATE users SET tokens = NULL, current_device_id = NULL WHERE tokens = ?";
         $stmt = $this->connection->prepare($sql);
         $stmt->bind_param("s", $token);
         $result = $stmt->execute();
-        
+
         if ($stmt->affected_rows > 0) {
             return ["status" => "success", "message" => "Successfully logged out."];
         } else {
             return ["status" => "error", "message" => "Invalid session or already logged out."];
         }
+    }
+
+    public function insertRecord(string $table, array $data): bool
+    {
+        // Extract column names and values
+        $columns = implode(", ", array_keys($data));
+
+        // Generate placeholders (?, ?, ?)
+        $placeholders = implode(", ", array_fill(0, count($data), "?"));
+
+        // Assume all values are strings for simple binding (works for most MySQL inserts)
+        $types = str_repeat("s", count($data));
+        $values = array_values($data);
+
+        $sql = "INSERT INTO $table ($columns) VALUES ($placeholders)";
+        $stmt = $this->connection->prepare($sql);
+
+        // Use spread operator to bind the dynamic array of values
+        $stmt->bind_param($types, ...$values);
+
+        return $stmt->execute();
+    }
+
+    // backend 
+
+    public function InsertClassSession($course_code, $class_date, $start_time, $latitude, $longitude)
+    {
+        $sql = "INSERT INTO attendance_sessions (course_code, class_date, start_time, latitude, longitude) VALUES (?, ?, ?, ?, ?)";
+        $prepare = $this->connection->prepare($sql);
+
+        $prepare->bind_param("sssdd", $course_code, $class_date, $start_time, $latitude, $longitude);
+
+        if ($prepare->execute()) {
+            return $this->connection->insert_id; 
+        }
+        return false;
+    }
+
+    public function InsertAttendanceRecord($session_id, $student_id, $student_lat, $student_long)
+    {
+        $sql = "INSERT INTO attendance_records (session_id, student_id, student_lat, student_long) VALUES (?, ?, ?, ?)";
+        $prepare = $this->connection->prepare($sql);
+
+        // "iidd" = 2 integers, 2 doubles
+        $prepare->bind_param("iidd", $session_id, $student_id, $student_lat, $student_long);
+
+        return $prepare->execute();
+    }
+
+
+    public function UpdateStudentOTP(string $matric_no, string $otp_code, string $otp_expiry)
+    {
+        $sql = "UPDATE students SET otp_code = ?, otp_expiry = ? WHERE matric_no = ?";
+        $prepare = $this->connection->prepare($sql);
+        
+        $prepare->bind_param("sss", $otp_code, $otp_expiry, $matric_no);
+        
+        return $prepare->execute();
+    }
+
+    public function ClearStudentOTP(int $student_id)
+    {
+        $sql = "UPDATE students SET otp_code = NULL, otp_expiry = NULL WHERE student_id = ?";
+        $prepare = $this->connection->prepare($sql);
+        $prepare->bind_param("i", $student_id);
+        return $prepare->execute();
     }
 }

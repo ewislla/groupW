@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin - Start Class</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+      body { background-color: #fafafa; color: #062a39; }
+      .card { border: none; box-shadow: 0 4px 12px rgba(6, 42, 57, 0.1); }
+      .card-header-custom { background-color: #062a39; color: #fafafa; border-radius: 8px 8px 0 0 !important; }
+      .btn-custom { background-color: #00b4d5; color: #fafafa; border: none; font-weight: 600; }
+      .btn-custom:hover { background-color: #062a39; color: #fafafa; }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-5" style="background-color: #062a39">
+      <div class="container">
+        <a class="navbar-brand text-uppercase fw-bold" href="#" style="color: #00b4d5">Attendance System</a>
+      </div>
+    </nav>
+
+    <div class="container mb-5">
+      <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+          <div class="card">
+            <div class="card-header card-header-custom p-4 text-center">
+              <h4 class="mb-0">Start Class Session</h4>
+              <small style="color: #00b4d5">Generate a session ID for students</small>
+            </div>
+            <div class="card-body p-4">
+              <div id="alertBox" class="alert d-none" role="alert"></div>
+
+              <form id="adminForm">
+                <div class="mb-4">
+                  <label for="course_code" class="form-label fw-bold">Course Code</label>
+                  <input type="text" class="form-control" id="course_code" name="course_code" placeholder="e.g. CSC301" required />
+                </div>
+                
+                <!-- Hidden inputs for Admin GPS coordinates -->
+                <input type="hidden" id="latitude" name="latitude" />
+                <input type="hidden" id="longitude" name="longitude" />
+
+                <button type="submit" class="btn btn-custom w-100 py-2" id="submitBtn">
+                  <span class="spinner-border spinner-border-sm d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
+                  <span id="btnText">Start Class & Lock Location</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      const baseUrl = "http://localhost:8000/api/";
+
+      document.getElementById("adminForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById("submitBtn");
+        const btnSpinner = document.getElementById("btnSpinner");
+        const btnText = document.getElementById("btnText");
+        const alertBox = document.getElementById("alertBox");
+
+        submitBtn.disabled = true;
+        btnSpinner.className = "spinner-border spinner-border-sm";
+        btnText.textContent = "Fetching GPS...";
+        alertBox.className = "alert alert-info";
+        alertBox.textContent = "Acquiring your location coordinates...";
+
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            async function (position) {
+              document.getElementById("latitude").value = position.coords.latitude;
+              document.getElementById("longitude").value = position.coords.longitude;
+
+              const form = document.getElementById("adminForm");
+              const formData = new FormData(form);
+              
+              btnText.textContent = "Starting Class...";
+
+              try {
+                const response = await fetch(baseUrl + "StartSession.php", {
+                  method: "POST",
+                  body: formData,
+                });
+
+                const result = await response.json();
+
+                submitBtn.disabled = false;
+                btnSpinner.className = "spinner-border spinner-border-sm d-none";
+                btnText.textContent = "Start Class & Lock Location";
+
+                if (result.status === "success") {
+                  alertBox.className = "alert alert-success fs-5 text-center";
+                  alertBox.innerHTML = `Class Started!<br><strong>Session ID: ${result.session_id}</strong>`;
+                  form.reset();
+                } else {
+                  alertBox.className = "alert alert-danger";
+                  alertBox.textContent = result.message;
+                }
+              } catch (error) {
+                submitBtn.disabled = false;
+                btnSpinner.className = "spinner-border spinner-border-sm d-none";
+                btnText.textContent = "Start Class & Lock Location";
+                alertBox.className = "alert alert-danger";
+                alertBox.textContent = "A network error occurred connecting to the backend.";
+              }
+            },
+            function (error) {
+              submitBtn.disabled = false;
+              btnSpinner.className = "spinner-border spinner-border-sm d-none";
+              btnText.textContent = "Start Class & Lock Location";
+              alertBox.className = "alert alert-danger";
+              alertBox.textContent = "GPS Error: You must allow location services to anchor this classroom.";
+            }
+          );
+        } else {
+          submitBtn.disabled = false;
+          btnSpinner.className = "spinner-border spinner-border-sm d-none";
+          btnText.textContent = "Start Class & Lock Location";
+          alertBox.className = "alert alert-danger";
+          alertBox.textContent = "Geolocation is not supported by your browser.";
+        }
+      });
+    </script>
+  </body>
+</html>

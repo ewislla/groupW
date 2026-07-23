@@ -178,3 +178,6 @@ Responses:
         }
       ]
     }
+
+
+    Server Super global

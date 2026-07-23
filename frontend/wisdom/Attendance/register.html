@@ -38,17 +38,9 @@
     </style>
   </head>
   <body>
-    <nav
-      class="navbar navbar-expand-lg navbar-dark mb-5"
-      style="background-color: #062a39"
-    >
+    <nav class="navbar navbar-expand-lg navbar-dark mb-5" style="background-color: #062a39">
       <div class="container">
-        <a
-          class="navbar-brand text-uppercase fw-bold"
-          href="#"
-          style="color: #00b4d5"
-          >Attendance System</a
-        >
+        <a class="navbar-brand text-uppercase fw-bold" href="#" style="color: #00b4d5">Attendance System</a>
         <div class="navbar-nav">
           <a class="nav-link" href="faculty.html">Faculties</a>
           <a class="nav-link" href="department.html">Departments</a>
@@ -63,9 +55,7 @@
           <div class="card">
             <div class="card-header card-header-custom p-4 text-center">
               <h4 class="mb-0">Student Registration</h4>
-              <small style="color: #00b4d5"
-                >Enroll a new student into the system</small
-              >
+              <small style="color: #00b4d5">Enroll a new student into the system</small>
             </div>
             <div class="card-body p-4">
               <div id="alertBox" class="alert d-none" role="alert"></div>
@@ -73,51 +63,23 @@
               <form id="registerForm">
                 <div class="row mb-3">
                   <div class="col-md-6">
-                    <label for="first_name" class="form-label"
-                      >First Name *</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="first_name"
-                      name="first_name"
-                      required
-                    />
+                    <label for="first_name" class="form-label">First Name *</label>
+                    <input type="text" class="form-control" id="first_name" name="first_name" required />
                   </div>
                   <div class="col-md-6 mt-3 mt-md-0">
-                    <label for="last_name" class="form-label"
-                      >Last Name *</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="last_name"
-                      name="last_name"
-                      required
-                    />
+                    <label for="last_name" class="form-label">Last Name *</label>
+                    <input type="text" class="form-control" id="last_name" name="last_name" required />
                   </div>
                 </div>
 
                 <div class="row mb-3">
                   <div class="col-md-6">
-                    <label for="middle_name" class="form-label"
-                      >Middle Name</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="middle_name"
-                      name="middle_name"
-                    />
+                    <label for="middle_name" class="form-label">Middle Name</label>
+                    <input type="text" class="form-control" id="middle_name" name="middle_name" />
                   </div>
                   <div class="col-md-6 mt-3 mt-md-0">
                     <label for="gender" class="form-label">Gender *</label>
-                    <select
-                      class="form-select"
-                      id="gender"
-                      name="gender"
-                      required
-                    >
+                    <select class="form-select" id="gender" name="gender" required>
                       <option value="">-- Select --</option>
                       <option value="Male">Male</option>
                       <option value="Female">Female</option>
@@ -127,82 +89,49 @@
 
                 <div class="row mb-3">
                   <div class="col-md-6">
-                    <label for="matric_no" class="form-label"
-                      >Matriculation No *</label
-                    >
-                    <input
-                      type="text"
-                      class="form-control"
-                      id="matric_no"
-                      name="matric_no"
-                      required
-                    />
+                    <label for="matric_no" class="form-label">Matriculation No *</label>
+                    <input type="text" class="form-control" id="matric_no" name="matric_no" required />
                   </div>
                   <div class="col-md-6 mt-3 mt-md-0">
-                    <label for="email" class="form-label"
-                      >Email Address *</label
-                    >
-                    <input
-                      type="email"
-                      class="form-control"
-                      id="email"
-                      name="email"
-                      required
-                    />
+                    <label for="email" class="form-label">Email Address *</label>
+                    <input type="email" class="form-control" id="email" name="email" required />
                   </div>
                 </div>
 
                 <div class="mb-3">
-                  <label for="password" class="form-label">Password *</label>
-                  <input
-                    type="password"
-                    class="form-control"
-                    id="password"
-                    name="password"
-                    minlength="6"
-                    required
-                  />
+                  <label for="level" class="form-label">Level *</label>
+                  <select class="form-select" id="level" name="level" required>
+                    <option value="">-- Choose Level --</option>
+                    <option value="100">100 Level</option>
+                    <option value="200">200 Level</option>
+                    <option value="300">300 Level</option>
+                    <option value="400">400 Level</option>
+                    <option value="500">500 Level</option>
+                    <option value="600">600 Level</option>
+                  </select>
                 </div>
 
                 <div class="row mb-4">
                   <div class="col-md-6">
                     <label for="faculty_id" class="form-label">Faculty *</label>
-                    <select
-                      class="form-select"
-                      id="faculty_id"
-                      name="faculty_id"
-                      required
-                      onchange="filterDepartments()"
-                    >
+                    <!-- Triggers filterDepartments() when changed -->
+                    <select class="form-select" id="faculty_id" name="faculty_id" required onchange="filterDepartments()">
                       <option value="">-- Choose Faculty --</option>
                     </select>
                   </div>
                   <div class="col-md-6 mt-3 mt-md-0">
-                    <label for="department_id" class="form-label"
-                      >Department *</label
-                    >
-                    <select
-                      class="form-select"
-                      id="department_id"
-                      name="department_id"
-                      required
-                    >
+                    <label for="department_id" class="form-label">Department *</label>
+                    <select class="form-select" id="department_id" name="department_id" required>
                       <option value="">-- Choose Department --</option>
                     </select>
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  class="btn btn-custom w-100 py-2"
-                  id="submitBtn"
-                >
-                  <span
-                    class="spinner-border spinner-border-sm d-none"
-                    id="btnSpinner"
-                    role="status"
-                    aria-hidden="true"
-                  ></span>
+                <!-- Hidden input to instantly lock the physical phone to this student -->
+                <input type="hidden" id="current_device_id" name="current_device_id" />
+
+                <button type="submit" class="btn btn-custom w-100 py-2" id="submitBtn">
+                  <span class="spinner-border spinner-border-sm d-none" id="btnSpinner" role="status" aria-hidden="true"></span>
                   <span id="btnText">Register Student</span>
                 </button>
               </form>
@@ -213,38 +142,58 @@
     </div>
 
     <script>
-      const baseUrl = "http://localhost:8000/api/";
+      // Make sure your backend API is running on this port!
+      const baseUrl = "http://localhost:8000/api/"; 
       let allDepartments = [];
 
+      // 1. Hardware Lockdown: Generate or retrieve Device ID instantly on page load
+      let deviceId = localStorage.getItem("device_id");
+      if (!deviceId) {
+        deviceId = "DEV_" + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem("device_id", deviceId);
+      }
+      document.getElementById("current_device_id").value = deviceId;
+
+      // 2. Fetch API Data for Dropdowns
       async function loadDropdownData() {
-        const facResponse = await fetch(baseUrl + "GetFaculty.php");
-        const facResult = await facResponse.json();
+        try {
+          // Fetch Faculties
+          const facResponse = await fetch(baseUrl + "GetFaculty.php");
+          const facResult = await facResponse.json();
 
-        const deptResponse = await fetch(baseUrl + "GetDepartment.php");
-        const deptResult = await deptResponse.json();
+          // Fetch Departments
+          const deptResponse = await fetch(baseUrl + "GetDepartment.php");
+          const deptResult = await deptResponse.json();
 
-        if (facResult.status === "success") {
-          const facultySelect = document.getElementById("faculty_id");
-          for (let i = 0; i < facResult.data.length; i++) {
-            const option = document.createElement("option");
-            option.value = facResult.data[i].faculty_id;
-            option.textContent = facResult.data[i].name;
-            facultySelect.appendChild(option);
+          // Populate Faculty Dropdown
+          if (facResult.status === "success") {
+            const facultySelect = document.getElementById("faculty_id");
+            for (let i = 0; i < facResult.data.length; i++) {
+              const option = document.createElement("option");
+              option.value = facResult.data[i].faculty_id; // Using your DB ID
+              option.textContent = facResult.data[i].name; // Using your DB Name
+              facultySelect.appendChild(option);
+            }
           }
-        }
 
-        if (deptResult.status === "success") {
-          allDepartments = deptResult.data;
+          // Save Departments to memory so we don't have to fetch them again later
+          if (deptResult.status === "success") {
+            allDepartments = deptResult.data;
+          }
+        } catch (error) {
+          console.error("Failed to load APIs. Is the server running?", error);
         }
       }
 
+      // 3. Filter Departments when a Faculty is selected
       function filterDepartments() {
         const selectedFacultyId = document.getElementById("faculty_id").value;
         const departmentSelect = document.getElementById("department_id");
 
-        departmentSelect.innerHTML =
-          '<option value="">-- Choose Department --</option>';
+        // Reset the department dropdown
+        departmentSelect.innerHTML = '<option value="">-- Choose Department --</option>';
 
+        // Loop through saved departments and only show those matching the selected faculty
         if (selectedFacultyId !== "") {
           for (let i = 0; i < allDepartments.length; i++) {
             if (allDepartments[i].faculty_id == selectedFacultyId) {
@@ -257,23 +206,24 @@
         }
       }
 
-      document
-        .getElementById("registerForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
+      // 4. Handle Form Submission
+      document.getElementById("registerForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
 
-          const form = e.target;
-          const formData = new FormData(form);
-          const submitBtn = document.getElementById("submitBtn");
-          const btnSpinner = document.getElementById("btnSpinner");
-          const btnText = document.getElementById("btnText");
-          const alertBox = document.getElementById("alertBox");
+        const form = e.target;
+        const formData = new FormData(form);
+        const submitBtn = document.getElementById("submitBtn");
+        const btnSpinner = document.getElementById("btnSpinner");
+        const btnText = document.getElementById("btnText");
+        const alertBox = document.getElementById("alertBox");
 
-          submitBtn.disabled = true;
-          btnSpinner.className = "spinner-border spinner-border-sm";
-          btnText.textContent = "Registering...";
-          alertBox.className = "alert d-none";
+        // UI Loading State
+        submitBtn.disabled = true;
+        btnSpinner.className = "spinner-border spinner-border-sm";
+        btnText.textContent = "Registering...";
+        alertBox.className = "alert d-none";
 
+        try {
           const response = await fetch(baseUrl + "RegisterStudent.php", {
             method: "POST",
             body: formData,
@@ -281,6 +231,7 @@
 
           const result = await response.json();
 
+          // Reset UI State
           submitBtn.disabled = false;
           btnSpinner.className = "spinner-border spinner-border-sm d-none";
           btnText.textContent = "Register Student";
@@ -288,14 +239,27 @@
           if (result.status === "success") {
             alertBox.className = "alert alert-success";
             alertBox.textContent = result.message;
+            
+            // Clear form and reset dropdowns
             form.reset();
             filterDepartments();
+            
+            // Re-inject Device ID (since form.reset() clears hidden fields too)
+            document.getElementById("current_device_id").value = localStorage.getItem("device_id");
           } else {
             alertBox.className = "alert alert-danger";
             alertBox.textContent = result.message;
           }
-        });
+        } catch (error) {
+          submitBtn.disabled = false;
+          btnSpinner.className = "spinner-border spinner-border-sm d-none";
+          btnText.textContent = "Register Student";
+          alertBox.className = "alert alert-danger";
+          alertBox.textContent = "A network error occurred. Please try again.";
+        }
+      });
 
+      // Run the API fetch immediately when the page loads
       window.onload = loadDropdownData;
     </script>
   </body>

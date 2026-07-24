@@ -73,3 +73,59 @@ Registers a new student in the database. This endpoint eliminates traditional pa
     "status": "success",
     "message": "Student registered successfully."
 }
+
+
+## 1. Admin Class Initialization API
+**Endpoint:** `/StartSession.php`
+**Method:** `POST`
+
+### Description
+This endpoint is invoked by an administrator or lecturer to initialize a live classroom session. It is designed to capture the exact GPS coordinates of the administrator's device to serve as the unalterable geographical anchor point (geofence) for the class. Server-side timestamps are generated internally using the system's timezone to prevent client-side clock manipulation.
+
+### Request Parameters (FormData)
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `course_code` | String | Yes | Identifier for the active class (e.g., "CSC301"). |
+| `latitude` | Float | Yes | Admin's current GPS latitude, automatically captured via HTML5 Geolocation API. |
+| `longitude` | Float | Yes | Admin's current GPS longitude, automatically captured via HTML5 Geolocation API. |
+
+### Success Response (HTTP 201 Created)
+```json
+{
+    "status": "success",
+    "message": "Class session started.",
+    "session_id": 42
+}
+
+{
+    "status": "error",
+    "message": "Failed to start the class session. Please ensure all parameters are provided."
+}
+
+## Request Attendance Verification OTP API
+**Endpoint:** `/SendAttendanceOTP.php`
+**Method:** `POST`
+
+### Description
+This endpoint handles the first step in the secure student attendance flow. It validates the student's existence via their matriculation number. Upon successful validation, it generates a cryptographically secure 6-digit One-Time Password (OTP) and sets a strict 10-minute expiration timestamp in the database. Finally, it utilizes the integrated PHPMailer trait to dispatch the OTP to the student's registered university email address.
+
+### Request Parameters (FormData)
+| Parameter | Type | Required | Description |
+| :--- | :--- | :--- | :--- |
+| `matric_no` | String | Yes | The student's unique university matriculation number. |
+
+### Success Response (HTTP 200 OK)
+```json
+{
+    "status": "success",
+    "message": "An OTP has been sent to your registered email.",
+    "email_hint": "wis***@gmail.com"
+}
+{
+    "status": "error",
+    "message": "Student not found. Please check your matriculation number."
+}
+{
+    "status": "error",
+    "message": "OTP generated, but failed to send the email due to a server error."
+}
